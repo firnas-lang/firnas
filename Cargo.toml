@@ -1,0 +1,2 @@
+[workspace]
+members = ["firnas_core", "firnas_cli"]

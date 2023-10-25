@@ -8,6 +8,17 @@ pub enum OpCode {
     Constant,
 }
 
+#[cfg(feature = "dbg")]
+impl OpCode {
+    pub fn dbg_str(&self) -> String {
+        match self {
+            OpCode::Return => "OP_RETURN",
+            OpCode::Constant => "OP_CONSTANT",
+        }
+        .to_string()
+    }
+}
+
 impl From<OpCode> for u8 {
     fn from(val: OpCode) -> Self {
         match val {
@@ -78,8 +89,8 @@ impl Chunk {
         }
         let instruction = self.code.get(offset).unwrap();
         match (*instruction).into() {
-            OpCode::Return => Chunk::simple_instruction("OP_RETURN", offset),
-            OpCode::Constant => Chunk::constant_instruction("OP_CONSTANT", self, offset),
+            code @ OpCode::Return => Chunk::simple_instruction(&code.dbg_str(), offset),
+            code @ OpCode::Constant => Chunk::constant_instruction(&code.dbg_str(), self, offset),
         }
     }
 

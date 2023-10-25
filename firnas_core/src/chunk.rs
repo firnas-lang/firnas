@@ -1,3 +1,5 @@
+use std::u32;
+
 use crate::value::Value;
 use crate::value::ValueVec;
 
@@ -27,6 +29,7 @@ impl From<u8> for OpCode {
 
 pub struct Chunk {
     code: Vec<u8>,
+    lines: Vec<u32>,
     constants: ValueVec,
 }
 
@@ -34,12 +37,14 @@ impl Chunk {
     pub fn new() -> Self {
         Self {
             code: Vec::new(),
+            lines: Vec::new(),
             constants: ValueVec::new(),
         }
     }
 
-    pub fn write(&mut self, byte: u8) {
+    pub fn write(&mut self, byte: u8, line: u32) {
         self.code.push(byte);
+        self.lines.push(line);
     }
 
     pub fn add_constant(&mut self, value: Value) -> usize {
@@ -66,6 +71,11 @@ impl Chunk {
 
     fn disassemble_instruction(&self, offset: usize) -> usize {
         print!("{offset:04} ");
+        if offset > 0 && self.lines.get(offset).unwrap() == self.lines.get(offset - 1).unwrap() {
+            print!("   | ");
+        } else {
+            print!("{:04} ", self.lines.get(offset).unwrap());
+        }
         let instruction = self.code.get(offset).unwrap();
         match (*instruction).into() {
             OpCode::Return => Chunk::simple_instruction("OP_RETURN", offset),

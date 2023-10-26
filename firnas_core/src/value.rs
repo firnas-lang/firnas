@@ -1,3 +1,5 @@
+use std::f64::INFINITY;
+
 pub struct Value(f64);
 
 impl Value {
@@ -35,6 +37,41 @@ impl std::ops::Neg for Value {
 
     fn neg(self) -> Self::Output {
         Value(-self.0)
+    }
+}
+
+impl std::ops::Add for Value {
+    type Output = Value;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Value(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::Sub for Value {
+    type Output = Value;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Value(self.0 - rhs.0)
+    }
+}
+
+impl std::ops::Mul for Value {
+    type Output = Value;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Value(self.0 * rhs.0)
+    }
+}
+
+impl std::ops::Div for Value {
+    type Output = Value;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        if rhs.0 == 0.0 {
+            return Value(INFINITY);
+        }
+        Value(self.0 / rhs.0)
     }
 }
 

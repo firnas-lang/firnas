@@ -1,8 +1,4 @@
-use crate::{
-    chunk::{Chunk, OpCode},
-    dbg_exec,
-    value::Value,
-};
+use crate::{chunk::Chunk, dbg_exec, op_code::OpCode, value::Value};
 
 pub struct Vm {
     chunk: Chunk,
@@ -51,6 +47,26 @@ impl Vm {
                 OpCode::Negate => {
                     let value = self.stack.pop().unwrap();
                     self.stack.push(-value);
+                }
+                OpCode::Add => {
+                    let rhs = self.stack.pop().unwrap();
+                    let lhs = self.stack.pop().unwrap();
+                    self.stack.push(lhs + rhs);
+                }
+                OpCode::Subtract => {
+                    let rhs = self.stack.pop().unwrap();
+                    let lhs = self.stack.pop().unwrap();
+                    self.stack.push(lhs - rhs);
+                }
+                OpCode::Multiply => {
+                    let rhs = self.stack.pop().unwrap();
+                    let lhs = self.stack.pop().unwrap();
+                    self.stack.push(lhs * rhs);
+                }
+                OpCode::Divide => {
+                    let rhs = self.stack.pop().unwrap();
+                    let lhs = self.stack.pop().unwrap();
+                    self.stack.push(lhs / rhs);
                 }
                 OpCode::ConstantLong => todo!(),
             }

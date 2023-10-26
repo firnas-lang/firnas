@@ -1,50 +1,6 @@
-use std::u32;
-
+use crate::op_code::OpCode;
 use crate::value::Value;
 use crate::value::ValueVec;
-
-pub enum OpCode {
-    Return,
-    Constant,
-    ConstantLong,
-    Negate,
-}
-
-#[cfg(feature = "dbg")]
-impl OpCode {
-    pub fn dbg_str(&self) -> String {
-        match self {
-            OpCode::Return => "OP_RETURN",
-            OpCode::Constant => "OP_CONSTANT",
-            OpCode::ConstantLong => "OP_CONSTANT_LONG",
-            OpCode::Negate => "OP_NEGATE",
-        }
-        .to_string()
-    }
-}
-
-impl From<OpCode> for u8 {
-    fn from(val: OpCode) -> Self {
-        match val {
-            OpCode::Return => 0,
-            OpCode::Constant => 1,
-            OpCode::ConstantLong => 2,
-            OpCode::Negate => 3,
-        }
-    }
-}
-
-impl From<u8> for OpCode {
-    fn from(val: u8) -> Self {
-        match val {
-            0 => OpCode::Return,
-            1 => OpCode::Constant,
-            2 => OpCode::ConstantLong,
-            3 => OpCode::Negate,
-            _ => panic!("Undefined state"),
-        }
-    }
-}
 
 pub struct Chunk {
     pub code: Vec<u8>,
@@ -64,6 +20,10 @@ impl Chunk {
     pub fn write(&mut self, byte: u8, line: u32) {
         self.code.push(byte);
         self.lines.push(line);
+    }
+
+    pub fn write_opcode(&mut self, opcode: OpCode, line: u32) {
+        self.write(opcode.into(), line);
     }
 
     pub fn write_constant(&mut self, value: Value, line: u32) {
@@ -109,6 +69,10 @@ impl Chunk {
                 Chunk::constant_long_instruction(&code.dbg_str(), self, offset)
             }
             code @ OpCode::Negate => Chunk::simple_instruction(&code.dbg_str(), offset),
+            code @ OpCode::Add => Chunk::simple_instruction(&code.dbg_str(), offset),
+            code @ OpCode::Subtract => Chunk::simple_instruction(&code.dbg_str(), offset),
+            code @ OpCode::Multiply => Chunk::simple_instruction(&code.dbg_str(), offset),
+            code @ OpCode::Divide => Chunk::simple_instruction(&code.dbg_str(), offset),
         }
     }
 

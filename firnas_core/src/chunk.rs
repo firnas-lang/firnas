@@ -43,9 +43,9 @@ impl From<u8> for OpCode {
 }
 
 pub struct Chunk {
-    code: Vec<u8>,
-    lines: Vec<u32>,
-    constants: ValueVec,
+    pub code: Vec<u8>,
+    pub lines: Vec<u32>,
+    pub constants: ValueVec,
 }
 
 impl Chunk {
@@ -90,7 +90,7 @@ impl Chunk {
         }
     }
 
-    fn disassemble_instruction(&self, offset: usize) -> usize {
+    pub fn disassemble_instruction(&self, offset: usize) -> usize {
         print!("{offset:04} ");
         if offset > 0 && &self.lines[offset] == &self.lines[offset - 1] {
             print!("   | ");

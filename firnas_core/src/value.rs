@@ -4,6 +4,10 @@ impl Value {
     pub fn new(val: f64) -> Self {
         Self(val)
     }
+
+    pub fn from_value(&self) -> Self {
+        Self::new(self.0)
+    }
 }
 
 impl std::ops::Deref for Value {

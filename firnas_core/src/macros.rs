@@ -18,12 +18,19 @@ macro_rules! string_key_hashmap {
     }}
 }
 
+/// A block that executes only when `"dbg"` feature is enabled
+///
+/// No need for semicolons inside this block.
 #[macro_export]
 macro_rules! dbg_exec {
-    ($body:expr) => {{
-        #[cfg(feature = "dbg")]
-        {
-            $body;
+    (@inner $s:stmt) => {
+        #[cfg(feature = "dbg")] {
+            $s
         }
-    }};
+    };
+    ( $($s:stmt)+ ) => {
+        (||{
+            $(dbg_exec!{@inner $s})+
+        })();
+    }
 }

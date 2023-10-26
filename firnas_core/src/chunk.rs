@@ -7,6 +7,7 @@ pub enum OpCode {
     Return,
     Constant,
     ConstantLong,
+    Negate,
 }
 
 #[cfg(feature = "dbg")]
@@ -16,6 +17,7 @@ impl OpCode {
             OpCode::Return => "OP_RETURN",
             OpCode::Constant => "OP_CONSTANT",
             OpCode::ConstantLong => "OP_CONSTANT_LONG",
+            OpCode::Negate => "OP_NEGATE",
         }
         .to_string()
     }
@@ -27,6 +29,7 @@ impl From<OpCode> for u8 {
             OpCode::Return => 0,
             OpCode::Constant => 1,
             OpCode::ConstantLong => 2,
+            OpCode::Negate => 3,
         }
     }
 }
@@ -37,6 +40,7 @@ impl From<u8> for OpCode {
             0 => OpCode::Return,
             1 => OpCode::Constant,
             2 => OpCode::ConstantLong,
+            3 => OpCode::Negate,
             _ => panic!("Undefined state"),
         }
     }
@@ -104,6 +108,7 @@ impl Chunk {
             code @ OpCode::ConstantLong => {
                 Chunk::constant_long_instruction(&code.dbg_str(), self, offset)
             }
+            code @ OpCode::Negate => Chunk::simple_instruction(&code.dbg_str(), offset),
         }
     }
 

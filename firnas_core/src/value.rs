@@ -30,6 +30,14 @@ impl core::fmt::Display for Value {
     }
 }
 
+impl std::ops::Neg for Value {
+    type Output = Value;
+
+    fn neg(self) -> Self::Output {
+        Value(-self.0)
+    }
+}
+
 pub struct ValueVec(Vec<Value>);
 
 impl std::ops::Deref for ValueVec {

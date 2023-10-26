@@ -48,7 +48,11 @@ impl Vm {
                     let constant = self.read_constant();
                     self.stack.push(constant);
                 }
-                _ => todo!(),
+                OpCode::Negate => {
+                    let value = self.stack.pop().unwrap();
+                    self.stack.push(-value);
+                }
+                OpCode::ConstantLong => todo!(),
             }
         }
     }

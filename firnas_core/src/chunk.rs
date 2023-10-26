@@ -6,6 +6,7 @@ use crate::value::ValueVec;
 pub enum OpCode {
     Return,
     Constant,
+    ConstantLong,
 }
 
 #[cfg(feature = "dbg")]
@@ -14,6 +15,7 @@ impl OpCode {
         match self {
             OpCode::Return => "OP_RETURN",
             OpCode::Constant => "OP_CONSTANT",
+            OpCode::ConstantLong => "OP_CONSTANT_LONG",
         }
         .to_string()
     }
@@ -24,6 +26,7 @@ impl From<OpCode> for u8 {
         match val {
             OpCode::Return => 0,
             OpCode::Constant => 1,
+            OpCode::ConstantLong => 2,
         }
     }
 }
@@ -33,6 +36,7 @@ impl From<u8> for OpCode {
         match val {
             0 => OpCode::Return,
             1 => OpCode::Constant,
+            2 => OpCode::ConstantLong,
             _ => panic!("Undefined state"),
         }
     }
@@ -58,6 +62,12 @@ impl Chunk {
         self.lines.push(line);
     }
 
+    pub fn write_constant(&mut self, value: Value, line: u32) {
+        self.write(OpCode::Constant.into(), line);
+        let constant = self.add_constant(value);
+        self.write(constant as u8, line);
+    }
+
     pub fn add_constant(&mut self, value: Value) -> usize {
         self.constants.write(value);
         self.constants.len() - 1
@@ -73,7 +83,7 @@ impl Default for Chunk {
 #[cfg(feature = "dbg")]
 impl Chunk {
     pub fn disassemble_chunk(&self, name: &str) {
-        println!("== {name} ==");
+        println!("==== {name} ====");
         let mut offset = 0;
         while offset < self.code.len() {
             offset = self.disassemble_instruction(offset);
@@ -82,15 +92,18 @@ impl Chunk {
 
     fn disassemble_instruction(&self, offset: usize) -> usize {
         print!("{offset:04} ");
-        if offset > 0 && self.lines.get(offset).unwrap() == self.lines.get(offset - 1).unwrap() {
+        if offset > 0 && &self.lines[offset] == &self.lines[offset - 1] {
             print!("   | ");
         } else {
-            print!("{:04} ", self.lines.get(offset).unwrap());
+            print!("{:04} ", &self.lines[offset]);
         }
-        let instruction = self.code.get(offset).unwrap();
+        let instruction = &self.code[offset];
         match (*instruction).into() {
             code @ OpCode::Return => Chunk::simple_instruction(&code.dbg_str(), offset),
             code @ OpCode::Constant => Chunk::constant_instruction(&code.dbg_str(), self, offset),
+            code @ OpCode::ConstantLong => {
+                Chunk::constant_long_instruction(&code.dbg_str(), self, offset)
+            }
         }
     }
 
@@ -100,11 +113,27 @@ impl Chunk {
     }
 
     fn constant_instruction(name: &str, chunk: &Chunk, offset: usize) -> usize {
-        let constant = chunk.code.get(offset + 1).unwrap();
+        let constant = &chunk.code[offset + 1];
         println!(
             "{name:<16} {constant:04} '{}'",
-            chunk.constants.get(*constant as usize).unwrap()
+            &chunk.constants[*constant as usize]
         );
         offset + 2
+    }
+
+    fn constant_long_instruction(name: &str, chunk: &Chunk, offset: usize) -> usize {
+        let constant_long = &chunk.code[offset + 1..offset + 4];
+        print!("{name:<16} ");
+        print!("[");
+        for constant in constant_long {
+            print!(" {constant:04} ");
+        }
+        print!("]");
+        print!(" [");
+        for constant in constant_long {
+            print!(" '{}' ", &chunk.constants[*constant as usize]);
+        }
+        println!("]");
+        offset + 4
     }
 }

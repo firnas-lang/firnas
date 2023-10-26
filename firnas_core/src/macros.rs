@@ -29,8 +29,8 @@ macro_rules! dbg_exec {
         }
     };
     ( $($s:stmt)+ ) => {
-        (||{
+        {
             $(dbg_exec!{@inner $s})+
-        })();
+        };
     }
 }

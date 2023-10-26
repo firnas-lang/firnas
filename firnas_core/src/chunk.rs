@@ -56,7 +56,7 @@ impl Chunk {
 
     pub fn disassemble_instruction(&self, offset: usize) -> usize {
         print!("{offset:04} ");
-        if offset > 0 && &self.lines[offset] == &self.lines[offset - 1] {
+        if offset > 0 && self.lines[offset] == self.lines[offset - 1] {
             print!("   | ");
         } else {
             print!("{:04} ", &self.lines[offset]);

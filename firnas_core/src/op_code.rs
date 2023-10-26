@@ -62,38 +62,30 @@ impl From<u8> for OpCode {
 mod tests {
     use crate::op_code::OpCode;
 
+    impl OpCode {
+        pub fn iterator() -> impl Iterator<Item = Self> {
+            use crate::op_code::OpCode as OC;
+
+            [
+                OC::Return,
+                OC::Constant,
+                OC::ConstantLong,
+                OC::Negate,
+                OC::Add,
+                OC::Subtract,
+                OC::Multiply,
+                OC::Divide,
+            ]
+            .iter()
+            .copied()
+        }
+    }
+
     #[test]
     fn it_should_be_inverse() {
-        let code = OpCode::Return;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
-
-        let code = OpCode::Constant;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
-
-        let code = OpCode::ConstantLong;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
-
-        let code = OpCode::Negate;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
-
-        let code = OpCode::Add;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
-
-        let code = OpCode::Subtract;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
-
-        let code = OpCode::Multiply;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
-
-        let code = OpCode::Divide;
-        let byte: u8 = code.into();
-        assert_eq!(code, byte.into());
+        for op_code in OpCode::iterator() {
+            let byte: u8 = op_code.into();
+            assert_eq!(op_code, byte.into());
+        }
     }
 }

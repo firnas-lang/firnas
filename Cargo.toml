@@ -8,5 +8,4 @@ members = [
     "firnas_compiler",
     "firnas_interpreter",
     "firnas_ext",
-    "firnas_runtime",
 ]

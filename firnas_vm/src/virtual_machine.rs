@@ -2,103 +2,12 @@ use crate::builtins;
 use crate::builtins::print;
 use crate::gc;
 use crate::value;
+use bytecode::disassemble_chunk;
 use firnas_bytecode as bytecode;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
-
-pub fn disassemble_code(chunk: &bytecode::Chunk) -> Vec<String> {
-    let mut lines: Vec<String> = Vec::new();
-
-    for (idx, (op, lineno)) in chunk.code.iter().enumerate() {
-        let formatted_op = match op {
-            bytecode::Op::Return => "OP_RETURN".to_string(),
-            bytecode::Op::Constant(const_idx) => format!(
-                "OP_CONSTANT {} (idx={})",
-                chunk.constants[*const_idx], *const_idx
-            ),
-            bytecode::Op::Nil => "OP_NIL".to_string(),
-            bytecode::Op::True => "OP_TRUE".to_string(),
-            bytecode::Op::False => "OP_FALSE".to_string(),
-            bytecode::Op::Negate => "OP_NEGATE".to_string(),
-            bytecode::Op::Add => "OP_ADD".to_string(),
-            bytecode::Op::Subtract => "OP_SUBTRACT".to_string(),
-            bytecode::Op::Multiply => "OP_MULTIPLY".to_string(),
-            bytecode::Op::Divide => "OP_DIVIDE".to_string(),
-            bytecode::Op::Not => "OP_NOT".to_string(),
-            bytecode::Op::Equal => "OP_NOT".to_string(),
-            bytecode::Op::Greater => "OP_GREATER".to_string(),
-            bytecode::Op::Less => "OP_LESS".to_string(),
-            bytecode::Op::Print => "OP_PRINT".to_string(),
-            bytecode::Op::Pop => "OP_POP".to_string(),
-            bytecode::Op::DefineGlobal(global_idx) => format!(
-                "OP_DEFINE_GLOBAL {:?} (idx={})",
-                chunk.constants[*global_idx], *global_idx
-            ),
-            bytecode::Op::GetGlobal(global_idx) => format!(
-                "OP_GET_GLOBAL {:?} (idx={})",
-                chunk.constants[*global_idx], *global_idx
-            ),
-            bytecode::Op::SetGlobal(global_idx) => format!(
-                "OP_SET_GLOBAL {:?} (idx={})",
-                chunk.constants[*global_idx], *global_idx
-            ),
-            bytecode::Op::GetLocal(idx) => format!("OP_GET_LOCAL idx={}", *idx),
-            bytecode::Op::SetLocal(idx) => format!("OP_SET_LOCAL idx={}", *idx),
-            bytecode::Op::GetUpval(idx) => format!("OP_GET_UPVAL idx={}", *idx),
-            bytecode::Op::SetUpval(idx) => format!("OP_SET_UPVAL idx={}", *idx),
-            bytecode::Op::JumpIfFalse(loc) => format!("OP_JUMP_IF_FALSE {}", *loc),
-            bytecode::Op::Jump(offset) => format!("OP_JUMP {}", *offset),
-            bytecode::Op::Loop(offset) => format!("OP_LOOP {}", *offset),
-            bytecode::Op::Call(arg_count) => format!("OP_CALL {}", *arg_count),
-            bytecode::Op::Closure(idx, _) => format!("OP_CLOSURE {}", chunk.constants[*idx],),
-            bytecode::Op::CloseUpvalue => "OP_CLOSE_UPVALUE".to_string(),
-            bytecode::Op::Class(idx) => format!("OP_CLASS {}", idx),
-            bytecode::Op::SetProperty(idx) => format!("OP_SET_PROPERTY {}", idx),
-            bytecode::Op::GetProperty(idx) => format!("OP_GET_PROPERTY {}", idx),
-            bytecode::Op::Method(idx) => format!("OP_METHOD {}", idx),
-            bytecode::Op::Invoke(method_name, arg_count) => {
-                format!("OP_INVOKE {} nargs={}", method_name, arg_count)
-            }
-            bytecode::Op::Inherit => "OP_INHERIT".to_string(),
-            bytecode::Op::GetSuper(idx) => format!("OP_GET_SUPER {}", idx),
-            bytecode::Op::SuperInvoke(method_name, arg_count) => {
-                format!("OP_SUPER_INOKE {} nargs={}", method_name, arg_count)
-            }
-            bytecode::Op::BuildList(size) => format!("OP_BUILD_LIST {}", size),
-            bytecode::Op::Subscr => "OP_SUBSCR".to_string(),
-            bytecode::Op::SetItem => "OP_SETITEM".to_string(),
-        };
-
-        lines.push(format!(
-            "{0: <04}   {1: <50} line {2: <50}",
-            idx, formatted_op, lineno.value
-        ));
-    }
-    lines
-}
-
-pub fn disassemble_chunk(chunk: &bytecode::Chunk, name: &str) -> String {
-    let mut lines: Vec<String> = Vec::new();
-
-    if !name.is_empty() {
-        lines.push(format!("============ {} ============", name));
-    }
-
-    lines.push("------------ constants -----------".to_string());
-    for (idx, constant) in chunk.constants.iter().enumerate() {
-        lines.push(format!("{:<4} {}", idx, constant));
-    }
-
-    lines.push("\n------------ code -----------------".to_string());
-
-    for code_line in disassemble_code(chunk) {
-        lines.push(code_line)
-    }
-
-    lines.join("\n")
-}
 
 fn dis_builtin(interp: &mut VirtualMachine, args: &[value::Value]) -> Result<value::Value, String> {
     // arity checking is done in the interpreter

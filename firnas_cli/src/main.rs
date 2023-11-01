@@ -18,8 +18,8 @@ pub struct Cli {
 pub enum Client {
     /// Lunch Read-Eval-Print Loop
     Repl,
-    /// Interpret a file
-    Interpret {
+    /// Compile a file
+    Compile {
         /// Path to file
         path: String,
     },
@@ -29,7 +29,7 @@ impl Client {
     pub fn execute(&self) -> anyhow::Result<()> {
         match self {
             Self::Repl => Client::handle_repl(),
-            Self::Interpret { path } => Client::handle_file(path.to_string()),
+            Self::Compile { path } => Client::handle_file(path.to_string()),
         }
     }
 

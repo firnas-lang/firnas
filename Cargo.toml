@@ -3,7 +3,7 @@ members = [
     "firnas_std",
     "firnas_vm",
     "firnas_tokenizer",
-    "cli",
+    "firnas_cli",
     "firnas_bytecode",
     "firnas_compiler",
     "firnas_interpreter",

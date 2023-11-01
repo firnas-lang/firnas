@@ -1,7 +1,7 @@
 use crate::value;
 use std::collections::HashMap;
 
-enum GCData {
+enum GcData {
     String(String),
     Closure(value::Closure),
     Class(value::Class),
@@ -10,58 +10,58 @@ enum GCData {
     List(Vec<value::Value>),
 }
 
-impl GCData {
+impl GcData {
     fn as_str(&self) -> Option<&String> {
         match self {
-            GCData::String(s) => Some(s),
+            GcData::String(s) => Some(s),
             _ => None,
         }
     }
     fn as_list(&self) -> Option<&Vec<value::Value>> {
         match self {
-            GCData::List(elements) => Some(elements),
+            GcData::List(elements) => Some(elements),
             _ => None,
         }
     }
     fn as_list_mut(&mut self) -> Option<&mut Vec<value::Value>> {
         match self {
-            GCData::List(elements) => Some(elements),
+            GcData::List(elements) => Some(elements),
             _ => None,
         }
     }
     fn as_closure(&self) -> Option<&value::Closure> {
         match self {
-            GCData::Closure(c) => Some(c),
+            GcData::Closure(c) => Some(c),
             _ => None,
         }
     }
     fn as_bound_method(&self) -> Option<&value::BoundMethod> {
         match self {
-            GCData::BoundMethod(m) => Some(m),
+            GcData::BoundMethod(m) => Some(m),
             _ => None,
         }
     }
     fn as_class(&self) -> Option<&value::Class> {
         match self {
-            GCData::Class(c) => Some(c),
+            GcData::Class(c) => Some(c),
             _ => None,
         }
     }
     fn as_class_mut(&mut self) -> Option<&mut value::Class> {
         match self {
-            GCData::Class(c) => Some(c),
+            GcData::Class(c) => Some(c),
             _ => None,
         }
     }
     fn as_instance(&self) -> Option<&value::Instance> {
         match self {
-            GCData::Instance(inst) => Some(inst),
+            GcData::Instance(inst) => Some(inst),
             _ => None,
         }
     }
     fn as_instance_mut(&mut self) -> Option<&mut value::Instance> {
         match self {
-            GCData::Instance(inst) => Some(inst),
+            GcData::Instance(inst) => Some(inst),
             _ => None,
         }
     }
@@ -69,11 +69,11 @@ impl GCData {
 
 struct GCVal {
     is_marked: bool,
-    data: GCData,
+    data: GcData,
 }
 
 impl GCVal {
-    fn from(data: GCData) -> GCVal {
+    fn from(data: GcData) -> GCVal {
         GCVal {
             is_marked: false,
             data,
@@ -120,14 +120,14 @@ impl Heap {
     pub fn manage_str(&mut self, s: String) -> HeapId {
         self.bytes_allocated += s.len();
         let id = self.generate_id();
-        self.values.insert(id, GCVal::from(GCData::String(s)));
+        self.values.insert(id, GCVal::from(GcData::String(s)));
         id
     }
 
     pub fn manage_list(&mut self, elements: Vec<value::Value>) -> HeapId {
         self.bytes_allocated += elements.len();
         let id = self.generate_id();
-        self.values.insert(id, GCVal::from(GCData::List(elements)));
+        self.values.insert(id, GCVal::from(GcData::List(elements)));
         id
     }
 
@@ -135,7 +135,7 @@ impl Heap {
         self.bytes_allocated += c.function.chunk.code.len();
         self.bytes_allocated += c.function.chunk.constants.len();
         let id = self.generate_id();
-        self.values.insert(id, GCVal::from(GCData::Closure(c)));
+        self.values.insert(id, GCVal::from(GcData::Closure(c)));
         id
     }
 
@@ -143,21 +143,21 @@ impl Heap {
         let id = self.generate_id();
         self.bytes_allocated += c.name.len();
         self.bytes_allocated += c.methods.keys().map(|method_name| method_name.len()).len();
-        self.values.insert(id, GCVal::from(GCData::Class(c)));
+        self.values.insert(id, GCVal::from(GcData::Class(c)));
         id
     }
 
     pub fn manage_instance(&mut self, inst: value::Instance) -> HeapId {
         let id = self.generate_id();
         self.bytes_allocated += inst.fields.keys().map(|attr| attr.len()).sum::<usize>();
-        self.values.insert(id, GCVal::from(GCData::Instance(inst)));
+        self.values.insert(id, GCVal::from(GcData::Instance(inst)));
         id
     }
 
     pub fn manage_bound_method(&mut self, method: value::BoundMethod) -> HeapId {
         let id = self.generate_id();
         self.values
-            .insert(id, GCVal::from(GCData::BoundMethod(method)));
+            .insert(id, GCVal::from(GcData::BoundMethod(method)));
         id
     }
 
@@ -243,12 +243,12 @@ impl Heap {
 
     pub fn children(&self, id: HeapId) -> Vec<HeapId> {
         match &self.values.get(&id).unwrap().data {
-            GCData::String(_) => Vec::new(),
-            GCData::Closure(closure) => self.closure_children(closure),
-            GCData::Class(class) => self.class_children(class),
-            GCData::Instance(instance) => self.instance_children(instance),
-            GCData::BoundMethod(method) => self.bound_method_children(method),
-            GCData::List(elements) => self.list_children(elements),
+            GcData::String(_) => Vec::new(),
+            GcData::Closure(closure) => self.closure_children(closure),
+            GcData::Class(class) => self.class_children(class),
+            GcData::Instance(instance) => self.instance_children(instance),
+            GcData::BoundMethod(method) => self.bound_method_children(method),
+            GcData::List(elements) => self.list_children(elements),
         }
     }
 

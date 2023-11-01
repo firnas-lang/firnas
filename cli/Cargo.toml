@@ -1,0 +1,14 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.75"
+text_io = "0.1.12"
+clap = { version = "4.4.7", features = ["derive"] }
+firnas_vm = { version = "*", path = "../firnas_vm" }
+firnas_ext = { version = "*", path = "../firnas_ext" }
+firnas_compiler = { version = "*", path = "../firnas_compiler" }
+firnas_tokenizer = { version = "*", path = "../firnas_tokenizer" }
+firnas_interpreter = { version = "*", path = "../firnas_interpreter" }

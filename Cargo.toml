@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "firnas_std",
+    "firnas_vm",
+    "firnas_tokenizer",
+    "cli",
+    "firnas_bytecode",
+    "firnas_compiler",
+    "firnas_interpreter",
+    "firnas_ext",
+    "firnas_runtime",
+]

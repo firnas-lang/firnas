@@ -1,0 +1,10 @@
+[package]
+name = "firnas_vm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+firnas_ext = { version = "*", path = "../firnas_ext" }
+firnas_bytecode = { version = "*", path = "../firnas_bytecode" }
+firnas_compiler = { version = "*", path = "../firnas_compiler" }
+firnas_tokenizer = { version = "*", path = "../firnas_tokenizer" }

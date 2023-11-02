@@ -6,7 +6,6 @@ members = [
     "firnas_compiler",
     "firnas_ext",
     "firnas_interpreter",
-    "firnas_std",
     "firnas_tokenizer",
     "firnas_vm",
 ]

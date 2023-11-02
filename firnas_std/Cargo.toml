@@ -1,7 +1,0 @@
-[package]
-name = "firnas_std"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-firnas_vm = { version = "*", path = "../firnas_vm" }

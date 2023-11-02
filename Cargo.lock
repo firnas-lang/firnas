@@ -151,9 +151,6 @@ dependencies = [
 [[package]]
 name = "firnas_tokenizer"
 version = "0.1.0"
-dependencies = [
- "firnas_bytecode",
-]
 
 [[package]]
 name = "firnas_vm"
@@ -162,7 +159,6 @@ dependencies = [
  "firnas_bytecode",
  "firnas_compiler",
  "firnas_ext",
- "firnas_tokenizer",
 ]
 
 [[package]]

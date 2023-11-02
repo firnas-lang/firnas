@@ -1,7 +1,6 @@
 use clap::Parser;
 use clap::Subcommand;
 use firnas_compiler::compiler;
-use firnas_ext;
 use firnas_interpreter::interpreter::Interpreter;
 use firnas_tokenizer::scanner;
 use firnas_vm::virtual_machine;

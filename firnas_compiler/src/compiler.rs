@@ -1,4 +1,4 @@
-use firnas_bytecode as bytecode;
+use firnas_bytecode;
 use firnas_ext;
 use firnas_tokenizer::scanner;
 
@@ -44,11 +44,11 @@ impl Default for Compiler {
 }
 
 pub struct Level {
-    function: bytecode::Function,
+    function: firnas_bytecode::Function,
     function_type: FunctionType,
     locals: Vec<Local>,
     scope_depth: i64,
-    upvals: Vec<bytecode::UpvalueLoc>,
+    upvals: Vec<firnas_bytecode::UpvalueLoc>,
 }
 
 impl Default for Level {
@@ -138,7 +138,7 @@ impl Compiler {
     pub fn compile(
         input: String,
         extensions: firnas_ext::Extensions,
-    ) -> Result<bytecode::Function, Error> {
+    ) -> Result<firnas_bytecode::Function, Error> {
         let mut compiler = Compiler {
             extensions,
             ..Default::default()
@@ -184,7 +184,7 @@ impl Compiler {
         let class_name = String::from_utf8(class_name_tok.clone().lexeme).unwrap();
         let name_constant = self.identifier_constant(class_name.clone());
         let line = self.previous().line;
-        self.emit_op(bytecode::Op::Class(name_constant), line);
+        self.emit_op(firnas_bytecode::Op::Class(name_constant), line);
         self.define_variable(name_constant);
 
         let mut saved_class_compiler = None;
@@ -214,7 +214,7 @@ impl Compiler {
             self.define_variable(0);
 
             self.named_variable(class_name_tok.clone(), false)?;
-            self.emit_op(bytecode::Op::Inherit, self.previous().line);
+            self.emit_op(firnas_bytecode::Op::Inherit, self.previous().line);
 
             if let Some(current_class) = &mut self.current_class {
                 current_class.has_superclass = true;
@@ -240,7 +240,7 @@ impl Compiler {
             scanner::TokenType::RightBrace,
             "Expected '}' after class body.",
         )?;
-        self.emit_op(bytecode::Op::Pop, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
 
         if let Some(current_class) = &self.current_class {
             if current_class.has_superclass {
@@ -276,7 +276,7 @@ impl Compiler {
 
         self.function(function_type)?;
 
-        self.emit_op(bytecode::Op::Method(constant), self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Method(constant), self.previous().line);
 
         Ok(())
     }
@@ -292,7 +292,7 @@ impl Compiler {
     fn function(&mut self, function_type: FunctionType) -> Result<(), Error> {
         let level = Level {
             function_type,
-            function: bytecode::Function {
+            function: firnas_bytecode::Function {
                 name: if let Some(scanner::Literal::Identifier(funname)) = &self.previous().literal
                 {
                     funname.clone()
@@ -345,12 +345,14 @@ impl Compiler {
         self.pop_level();
         let const_idx = self
             .current_chunk()
-            .add_constant(bytecode::Constant::Function(bytecode::Closure {
-                function,
-                upvalues: Vec::new(),
-            }));
+            .add_constant(firnas_bytecode::Constant::Function(
+                firnas_bytecode::Closure {
+                    function,
+                    upvalues: Vec::new(),
+                },
+            ));
         self.emit_op(
-            bytecode::Op::Closure(const_idx, upvals),
+            firnas_bytecode::Op::Closure(const_idx, upvals),
             self.previous().line,
         );
 
@@ -364,7 +366,7 @@ impl Compiler {
             self.expression()?;
         } else {
             let line = self.previous().line;
-            self.emit_op(bytecode::Op::Nil, line)
+            self.emit_op(firnas_bytecode::Op::Nil, line)
         }
 
         self.consume(
@@ -395,7 +397,7 @@ impl Compiler {
             return;
         }
         let line = self.previous().line;
-        self.emit_op(bytecode::Op::DefineGlobal(global_idx), line);
+        self.emit_op(firnas_bytecode::Op::DefineGlobal(global_idx), line);
     }
 
     fn declare_variable(&mut self) -> Result<(), Error> {
@@ -531,7 +533,7 @@ impl Compiler {
                 scanner::TokenType::Semicolon,
                 "Expected ';' after return value.",
             )?;
-            self.emit_op(bytecode::Op::Return, self.previous().line);
+            self.emit_op(firnas_bytecode::Op::Return, self.previous().line);
         }
         Ok(())
     }
@@ -556,18 +558,19 @@ impl Compiler {
                 scanner::TokenType::Semicolon,
                 "Expected ';' after loop condition",
             )?;
-            maybe_exit_jump = Some(self.emit_jump(bytecode::Op::JumpIfFalse(/*placeholder*/ 0)));
-            self.emit_op(bytecode::Op::Pop, self.previous().line);
+            maybe_exit_jump =
+                Some(self.emit_jump(firnas_bytecode::Op::JumpIfFalse(/*placeholder*/ 0)));
+            self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
         }
         let maybe_exit_jump = maybe_exit_jump;
 
         // increment
         if !self.matches(scanner::TokenType::RightParen) {
-            let body_jump = self.emit_jump(bytecode::Op::Jump(/*placeholder*/ 0));
+            let body_jump = self.emit_jump(firnas_bytecode::Op::Jump(/*placeholder*/ 0));
 
             let increment_start = self.current_chunk().code.len() + 1;
             self.expression()?;
-            self.emit_op(bytecode::Op::Pop, self.previous().line);
+            self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
             self.consume(
                 scanner::TokenType::RightParen,
                 "Expected ')' after for clauses.",
@@ -584,7 +587,7 @@ impl Compiler {
 
         if let Some(exit_jump) = maybe_exit_jump {
             self.patch_jump(exit_jump);
-            self.emit_op(bytecode::Op::Pop, self.previous().line);
+            self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
         }
 
         self.end_scope();
@@ -601,21 +604,21 @@ impl Compiler {
             "Expected ')' after condition.",
         )?;
 
-        let exit_jump = self.emit_jump(bytecode::Op::JumpIfFalse(/*placeholder*/ 0));
+        let exit_jump = self.emit_jump(firnas_bytecode::Op::JumpIfFalse(/*placeholder*/ 0));
 
-        self.emit_op(bytecode::Op::Pop, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
         self.statement()?;
 
         self.emit_loop(loop_start);
 
         self.patch_jump(exit_jump);
-        self.emit_op(bytecode::Op::Pop, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
         Ok(())
     }
 
     fn emit_loop(&mut self, loop_start: usize) {
         let offset = self.current_chunk().code.len() - loop_start + 2;
-        self.emit_op(bytecode::Op::Loop(offset), self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Loop(offset), self.previous().line);
     }
 
     fn if_statement(&mut self) -> Result<(), Error> {
@@ -626,13 +629,15 @@ impl Compiler {
             "Expected ')' after condition.",
         )?;
 
-        let then_jump = self.emit_jump(bytecode::Op::JumpIfFalse(/*placeholder value*/ 0));
-        self.emit_op(bytecode::Op::Pop, self.previous().line);
+        let then_jump = self.emit_jump(firnas_bytecode::Op::JumpIfFalse(
+            /*placeholder value*/ 0,
+        ));
+        self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
         self.statement()?;
-        let else_jump = self.emit_jump(bytecode::Op::Jump(/*placeholder value*/ 0));
+        let else_jump = self.emit_jump(firnas_bytecode::Op::Jump(/*placeholder value*/ 0));
 
         self.patch_jump(then_jump);
-        self.emit_op(bytecode::Op::Pop, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
 
         if self.matches(scanner::TokenType::Else) {
             self.statement()?;
@@ -645,11 +650,12 @@ impl Compiler {
     fn patch_jump(&mut self, jump_location: usize) {
         let true_jump = self.current_chunk().code.len() - jump_location - 1;
         let (maybe_jump, lineno) = &self.current_chunk().code[jump_location];
-        if let bytecode::Op::JumpIfFalse(_) = maybe_jump {
+        if let firnas_bytecode::Op::JumpIfFalse(_) = maybe_jump {
             self.current_chunk().code[jump_location] =
-                (bytecode::Op::JumpIfFalse(true_jump), *lineno);
-        } else if let bytecode::Op::Jump(_) = maybe_jump {
-            self.current_chunk().code[jump_location] = (bytecode::Op::Jump(true_jump), *lineno);
+                (firnas_bytecode::Op::JumpIfFalse(true_jump), *lineno);
+        } else if let firnas_bytecode::Op::Jump(_) = maybe_jump {
+            self.current_chunk().code[jump_location] =
+                (firnas_bytecode::Op::Jump(true_jump), *lineno);
         } else {
             panic!(
                 "attempted to patch a jump but didn't find a jump! Found {:?}.",
@@ -658,7 +664,7 @@ impl Compiler {
         }
     }
 
-    fn emit_jump(&mut self, op: bytecode::Op) -> usize {
+    fn emit_jump(&mut self, op: firnas_bytecode::Op) -> usize {
         self.emit_op(op, self.previous().line);
         self.current_chunk().code.len() - 1
     }
@@ -696,9 +702,9 @@ impl Compiler {
             let local = self.locals_mut().pop().unwrap();
 
             if local.is_captured {
-                self.emit_op(bytecode::Op::CloseUpvalue, line);
+                self.emit_op(firnas_bytecode::Op::CloseUpvalue, line);
             } else {
-                self.emit_op(bytecode::Op::Pop, line);
+                self.emit_op(firnas_bytecode::Op::Pop, line);
             }
         }
     }
@@ -710,14 +716,14 @@ impl Compiler {
             "Expected ';' after expression.",
         )?;
         let line = self.previous().line;
-        self.emit_op(bytecode::Op::Pop, line);
+        self.emit_op(firnas_bytecode::Op::Pop, line);
         Ok(())
     }
 
     fn print_statement(&mut self) -> Result<(), Error> {
         self.expression()?;
         self.consume(scanner::TokenType::Semicolon, "Expected ';' after value.")?;
-        self.emit_op(bytecode::Op::Print, self.previous().clone().line);
+        self.emit_op(firnas_bytecode::Op::Print, self.previous().clone().line);
         Ok(())
     }
 
@@ -771,15 +777,15 @@ impl Compiler {
 
         match tok.ty {
             scanner::TokenType::Nil => {
-                self.emit_op(bytecode::Op::Nil, tok.line);
+                self.emit_op(firnas_bytecode::Op::Nil, tok.line);
                 Ok(())
             }
             scanner::TokenType::True => {
-                self.emit_op(bytecode::Op::True, tok.line);
+                self.emit_op(firnas_bytecode::Op::True, tok.line);
                 Ok(())
             }
             scanner::TokenType::False => {
-                self.emit_op(bytecode::Op::False, tok.line);
+                self.emit_op(firnas_bytecode::Op::False, tok.line);
                 Ok(())
             }
             _ => {
@@ -807,22 +813,22 @@ impl Compiler {
         }
         .unwrap();
 
-        let get_op: bytecode::Op;
-        let set_op: bytecode::Op;
+        let get_op: firnas_bytecode::Op;
+        let set_op: firnas_bytecode::Op;
 
         match self.resolve_variable(&name) {
             Ok(Resolution::Local(idx)) => {
-                get_op = bytecode::Op::GetLocal(idx);
-                set_op = bytecode::Op::SetLocal(idx);
+                get_op = firnas_bytecode::Op::GetLocal(idx);
+                set_op = firnas_bytecode::Op::SetLocal(idx);
             }
             Ok(Resolution::Global) => {
                 let idx = self.identifier_constant(name);
-                get_op = bytecode::Op::GetGlobal(idx);
-                set_op = bytecode::Op::SetGlobal(idx);
+                get_op = firnas_bytecode::Op::GetGlobal(idx);
+                set_op = firnas_bytecode::Op::SetGlobal(idx);
             }
             Ok(Resolution::Upvalue(idx)) => {
-                get_op = bytecode::Op::GetUpval(idx);
-                set_op = bytecode::Op::SetUpval(idx);
+                get_op = firnas_bytecode::Op::GetUpval(idx);
+                set_op = firnas_bytecode::Op::SetUpval(idx);
             }
             Err(err) => {
                 return Err(err);
@@ -861,7 +867,9 @@ impl Compiler {
         {
             self.levels[prev_level_idx].locals[local_idx].is_captured = true;
 
-            return Ok(Some(self.add_upval(bytecode::UpvalueLoc::Local(local_idx))));
+            return Ok(Some(
+                self.add_upval(firnas_bytecode::UpvalueLoc::Local(local_idx)),
+            ));
         }
 
         self.level_idx -= 1;
@@ -869,7 +877,7 @@ impl Compiler {
         if let Some(upval_idx) = self.resolve_upval(name)? {
             self.level_idx += 1; // couldn't figure out how to satisfy borrow checker with scopeguard!
             return Ok(Some(
-                self.add_upval(bytecode::UpvalueLoc::Upvalue(upval_idx)),
+                self.add_upval(firnas_bytecode::UpvalueLoc::Upvalue(upval_idx)),
             ));
         }
         self.level_idx += 1;
@@ -877,7 +885,7 @@ impl Compiler {
         Ok(None)
     }
 
-    fn add_upval(&mut self, upvalue: bytecode::UpvalueLoc) -> usize {
+    fn add_upval(&mut self, upvalue: firnas_bytecode::UpvalueLoc) -> usize {
         if let Some(res) = self
             .current_level()
             .upvals
@@ -920,7 +928,7 @@ impl Compiler {
         match tok.literal {
             Some(scanner::Literal::Str(s)) => {
                 let const_idx = self.current_chunk().add_constant_string(s);
-                self.emit_op(bytecode::Op::Constant(const_idx), tok.line);
+                self.emit_op(firnas_bytecode::Op::Constant(const_idx), tok.line);
                 Ok(())
             }
             _ => panic!("expected literal when parsing string"),
@@ -936,46 +944,46 @@ impl Compiler {
 
         match operator.ty {
             scanner::TokenType::Plus => {
-                self.emit_op(bytecode::Op::Add, operator.line);
+                self.emit_op(firnas_bytecode::Op::Add, operator.line);
                 Ok(())
             }
             scanner::TokenType::Minus => {
-                self.emit_op(bytecode::Op::Subtract, operator.line);
+                self.emit_op(firnas_bytecode::Op::Subtract, operator.line);
                 Ok(())
             }
             scanner::TokenType::Star => {
-                self.emit_op(bytecode::Op::Multiply, operator.line);
+                self.emit_op(firnas_bytecode::Op::Multiply, operator.line);
                 Ok(())
             }
             scanner::TokenType::Slash => {
-                self.emit_op(bytecode::Op::Divide, operator.line);
+                self.emit_op(firnas_bytecode::Op::Divide, operator.line);
                 Ok(())
             }
             scanner::TokenType::BangEqual => {
-                self.emit_op(bytecode::Op::Equal, operator.line);
-                self.emit_op(bytecode::Op::Not, operator.line);
+                self.emit_op(firnas_bytecode::Op::Equal, operator.line);
+                self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
             }
             scanner::TokenType::EqualEqual => {
-                self.emit_op(bytecode::Op::Equal, operator.line);
+                self.emit_op(firnas_bytecode::Op::Equal, operator.line);
                 Ok(())
             }
             scanner::TokenType::Greater => {
-                self.emit_op(bytecode::Op::Greater, operator.line);
+                self.emit_op(firnas_bytecode::Op::Greater, operator.line);
                 Ok(())
             }
             scanner::TokenType::GreaterEqual => {
-                self.emit_op(bytecode::Op::Less, operator.line);
-                self.emit_op(bytecode::Op::Not, operator.line);
+                self.emit_op(firnas_bytecode::Op::Less, operator.line);
+                self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
             }
             scanner::TokenType::Less => {
-                self.emit_op(bytecode::Op::Less, operator.line);
+                self.emit_op(firnas_bytecode::Op::Less, operator.line);
                 Ok(())
             }
             scanner::TokenType::LessEqual => {
-                self.emit_op(bytecode::Op::Greater, operator.line);
-                self.emit_op(bytecode::Op::Not, operator.line);
+                self.emit_op(firnas_bytecode::Op::Greater, operator.line);
+                self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
             }
             _ => Err(Error::Parse(ErrorInfo {
@@ -987,19 +995,19 @@ impl Compiler {
     }
 
     fn and(&mut self, _can_assign: bool) -> Result<(), Error> {
-        let end_jump = self.emit_jump(bytecode::Op::JumpIfFalse(/*placeholder*/ 0));
-        self.emit_op(bytecode::Op::Pop, self.previous().line);
+        let end_jump = self.emit_jump(firnas_bytecode::Op::JumpIfFalse(/*placeholder*/ 0));
+        self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
         self.parse_precedence(Precedence::And)?;
         self.patch_jump(end_jump);
         Ok(())
     }
 
     fn or(&mut self, _can_assign: bool) -> Result<(), Error> {
-        let else_jump = self.emit_jump(bytecode::Op::JumpIfFalse(/*placeholder*/ 0));
-        let end_jump = self.emit_jump(bytecode::Op::Jump(/*placeholder*/ 0));
+        let else_jump = self.emit_jump(firnas_bytecode::Op::JumpIfFalse(/*placeholder*/ 0));
+        let end_jump = self.emit_jump(firnas_bytecode::Op::Jump(/*placeholder*/ 0));
 
         self.patch_jump(else_jump);
-        self.emit_op(bytecode::Op::Pop, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
 
         self.parse_precedence(Precedence::Or)?;
         self.patch_jump(end_jump);
@@ -1008,7 +1016,7 @@ impl Compiler {
 
     fn call(&mut self, _can_assign: bool) -> Result<(), Error> {
         let arg_count = self.argument_list()?;
-        self.emit_op(bytecode::Op::Call(arg_count), self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Call(arg_count), self.previous().line);
         Ok(())
     }
 
@@ -1054,10 +1062,10 @@ impl Compiler {
         let op = if self.matches(scanner::TokenType::LeftParen) {
             let arg_count = self.argument_list()?;
             self.named_variable(Compiler::synthetic_token("super"), false)?;
-            bytecode::Op::SuperInvoke(method_name, arg_count)
+            firnas_bytecode::Op::SuperInvoke(method_name, arg_count)
         } else {
             self.named_variable(Compiler::synthetic_token("super"), false)?;
-            bytecode::Op::GetSuper(self.identifier_constant(method_name))
+            firnas_bytecode::Op::GetSuper(self.identifier_constant(method_name))
         };
         self.emit_op(op, self.previous().line);
         Ok(())
@@ -1085,12 +1093,12 @@ impl Compiler {
         let property_constant = self.identifier_constant(property_name.clone());
         let op = if can_assign && self.matches(scanner::TokenType::Equal) {
             self.expression()?;
-            bytecode::Op::SetProperty(property_constant)
+            firnas_bytecode::Op::SetProperty(property_constant)
         } else if self.matches(scanner::TokenType::LeftParen) {
             let arg_count = self.argument_list()?;
-            bytecode::Op::Invoke(property_name, arg_count)
+            firnas_bytecode::Op::Invoke(property_name, arg_count)
         } else {
-            bytecode::Op::GetProperty(property_constant)
+            firnas_bytecode::Op::GetProperty(property_constant)
         };
         self.emit_op(op, self.previous().line);
         Ok(())
@@ -1110,7 +1118,7 @@ impl Compiler {
             scanner::TokenType::RightBracket,
             "Expected ] after subscript",
         )?;
-        self.emit_op(bytecode::Op::Subscr, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Subscr, self.previous().line);
         Ok(())
     }
 
@@ -1124,7 +1132,10 @@ impl Compiler {
         }
 
         let arg_count = self.list_elements()?;
-        self.emit_op(bytecode::Op::BuildList(arg_count), self.previous().line);
+        self.emit_op(
+            firnas_bytecode::Op::BuildList(arg_count),
+            self.previous().line,
+        );
         Ok(())
     }
 
@@ -1168,11 +1179,11 @@ impl Compiler {
 
         match operator.ty {
             scanner::TokenType::Minus => {
-                self.emit_op(bytecode::Op::Negate, operator.line);
+                self.emit_op(firnas_bytecode::Op::Negate, operator.line);
                 Ok(())
             }
             scanner::TokenType::Bang => {
-                self.emit_op(bytecode::Op::Not, operator.line);
+                self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
             }
             _ => Err(Error::Parse(ErrorInfo {
@@ -1185,23 +1196,23 @@ impl Compiler {
 
     fn emit_number(&mut self, n: f64, lineno: usize) {
         let const_idx = self.current_chunk().add_constant_number(n);
-        self.emit_op(bytecode::Op::Constant(const_idx), lineno);
+        self.emit_op(firnas_bytecode::Op::Constant(const_idx), lineno);
     }
 
-    fn emit_op(&mut self, op: bytecode::Op, lineno: usize) {
+    fn emit_op(&mut self, op: firnas_bytecode::Op, lineno: usize) {
         self.current_chunk()
             .code
-            .push((op, bytecode::Lineno(lineno)))
+            .push((op, firnas_bytecode::Lineno::new(lineno)))
     }
 
     fn emit_return(&mut self) {
         let op = match self.current_level().function_type {
-            FunctionType::Initializer => bytecode::Op::GetLocal(0),
-            _ => bytecode::Op::Nil,
+            FunctionType::Initializer => firnas_bytecode::Op::GetLocal(0),
+            _ => firnas_bytecode::Op::Nil,
         };
 
         self.emit_op(op, self.previous().line);
-        self.emit_op(bytecode::Op::Return, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::Return, self.previous().line);
     }
 
     fn parse_precedence(&mut self, precedence: Precedence) -> Result<(), Error> {
@@ -1225,7 +1236,7 @@ impl Compiler {
         }
 
         if can_assign && self.matches(scanner::TokenType::Equal) {
-            if let Some((bytecode::Op::Subscr, _)) = self.current_chunk().code.last() {
+            if let Some((firnas_bytecode::Op::Subscr, _)) = self.current_chunk().code.last() {
                 self.fixup_subscript_to_setitem()?;
             } else {
                 return Err(self.error("Invalid assignment target"));
@@ -1238,7 +1249,7 @@ impl Compiler {
     fn fixup_subscript_to_setitem(&mut self) -> Result<(), Error> {
         self.current_chunk().code.pop(); // pop the subscript op
         self.expression()?; // consume right hand side
-        self.emit_op(bytecode::Op::SetItem, self.previous().line);
+        self.emit_op(firnas_bytecode::Op::SetItem, self.previous().line);
         Ok(())
     }
 
@@ -1541,7 +1552,7 @@ impl Compiler {
         }
     }
 
-    fn current_chunk(&mut self) -> &mut bytecode::Chunk {
+    fn current_chunk(&mut self) -> &mut firnas_bytecode::Chunk {
         &mut self.current_level_mut().function.chunk
     }
 
@@ -1563,7 +1574,7 @@ impl Compiler {
         self.level_idx -= 1;
     }
 
-    fn current_function_mut(&mut self) -> &mut bytecode::Function {
+    fn current_function_mut(&mut self) -> &mut firnas_bytecode::Function {
         &mut self.current_level_mut().function
     }
 

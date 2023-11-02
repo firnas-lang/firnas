@@ -6,9 +6,10 @@ pub struct Lineno {
     pub value: usize,
 }
 
-#[allow(non_snake_case)]
-pub fn Lineno(value: usize) -> Lineno {
-    Lineno { value }
+impl Lineno {
+    pub fn new(value: usize) -> Self {
+        Self { value }
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]

@@ -2,8 +2,8 @@ use crate::builtins;
 use crate::builtins::print;
 use crate::gc;
 use crate::value;
-use bytecode::disassemble_chunk;
-use firnas_bytecode as bytecode;
+use firnas_bytecode;
+use firnas_bytecode::disassemble_chunk;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
@@ -24,7 +24,6 @@ fn dis_builtin(interp: &mut VirtualMachine, args: &[value::Value]) -> Result<val
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 enum Binop {
     Add,
@@ -147,23 +146,23 @@ pub struct CallFrame {
 }
 
 impl CallFrame {
-    fn next_op(&self) -> (bytecode::Op, bytecode::Lineno) {
+    fn next_op(&self) -> (firnas_bytecode::Op, firnas_bytecode::Lineno) {
         self.closure.function.chunk.code[self.ip].clone()
     }
 
-    fn next_op_and_advance(&mut self) -> (bytecode::Op, bytecode::Lineno) {
+    fn next_op_and_advance(&mut self) -> (firnas_bytecode::Op, firnas_bytecode::Lineno) {
         let res = self.next_op();
         self.ip += 1;
         res
     }
 
-    fn read_constant(&self, idx: usize) -> bytecode::Constant {
+    fn read_constant(&self, idx: usize) -> firnas_bytecode::Constant {
         self.closure.function.chunk.constants[idx].clone()
     }
 }
 
 impl VirtualMachine {
-    pub fn prepare_interpret(&mut self, func: bytecode::Function) {
+    pub fn prepare_interpret(&mut self, func: firnas_bytecode::Function) {
         self.stack
             .push(value::Value::Function(self.heap.manage_closure(
                 value::Closure {
@@ -181,7 +180,7 @@ impl VirtualMachine {
         });
     }
 
-    pub fn interpret(&mut self, func: bytecode::Function) -> Result<(), VmError> {
+    pub fn interpret(&mut self, func: firnas_bytecode::Function) -> Result<(), VmError> {
         self.prepare_interpret(func);
         self.run()
     }
@@ -270,7 +269,7 @@ impl VirtualMachine {
         }
 
         match op {
-            (bytecode::Op::Return, _) => {
+            (firnas_bytecode::Op::Return, _) => {
                 let result = self.pop_stack();
 
                 for idx in self.frame().slots_offset..self.stack.len() {
@@ -290,7 +289,7 @@ impl VirtualMachine {
 
                 self.stack.push(result);
             }
-            (bytecode::Op::Closure(idx, upvals), _) => {
+            (firnas_bytecode::Op::Closure(idx, upvals), _) => {
                 let constant = self.read_constant(idx);
 
                 if let value::Value::Function(closure_handle) = constant {
@@ -298,10 +297,10 @@ impl VirtualMachine {
                     let upvalues = upvals
                         .iter()
                         .map(|upval| match upval {
-                            bytecode::UpvalueLoc::Upvalue(idx) => {
+                            firnas_bytecode::UpvalueLoc::Upvalue(idx) => {
                                 self.frame().closure.upvalues[*idx].clone()
                             }
-                            bytecode::UpvalueLoc::Local(idx) => {
+                            firnas_bytecode::UpvalueLoc::Local(idx) => {
                                 if let Some(upval) = self.find_open_uval(*idx) {
                                     upval
                                 } else {
@@ -323,25 +322,25 @@ impl VirtualMachine {
                         )));
                 } else {
                     panic!(
-                        "When interpreting bytecode::Op::Closure, expected function, found {:?}",
+                        "When interpreting firnas_bytecode::Op::Closure, expected function, found {:?}",
                         value::type_of(&constant)
                     );
                 }
             }
-            (bytecode::Op::Constant(idx), _) => {
+            (firnas_bytecode::Op::Constant(idx), _) => {
                 let constant = self.read_constant(idx);
                 self.stack.push(constant);
             }
-            (bytecode::Op::Nil, _) => {
+            (firnas_bytecode::Op::Nil, _) => {
                 self.stack.push(value::Value::Nil);
             }
-            (bytecode::Op::True, _) => {
+            (firnas_bytecode::Op::True, _) => {
                 self.stack.push(value::Value::Bool(true));
             }
-            (bytecode::Op::False, _) => {
+            (firnas_bytecode::Op::False, _) => {
                 self.stack.push(value::Value::Bool(false));
             }
-            (bytecode::Op::Negate, lineno) => {
+            (firnas_bytecode::Op::Negate, lineno) => {
                 let top_stack = self.peek();
                 let maybe_number = VirtualMachine::extract_number(top_stack);
 
@@ -358,7 +357,7 @@ impl VirtualMachine {
                         }
                     }
             }
-            (bytecode::Op::Add, lineno) => {
+            (firnas_bytecode::Op::Add, lineno) => {
                 let val1 = self.peek_by(0).clone();
                 let val2 = self.peek_by(1).clone();
 
@@ -395,19 +394,21 @@ impl VirtualMachine {
                     }
                 }
             }
-            (bytecode::Op::Subtract, lineno) => match self.numeric_binop(Binop::Sub, lineno) {
+            (firnas_bytecode::Op::Subtract, lineno) => match self.numeric_binop(Binop::Sub, lineno)
+            {
                 Ok(()) => {}
                 Err(err) => return Err(err),
             },
-            (bytecode::Op::Multiply, lineno) => match self.numeric_binop(Binop::Mul, lineno) {
+            (firnas_bytecode::Op::Multiply, lineno) => match self.numeric_binop(Binop::Mul, lineno)
+            {
                 Ok(()) => {}
                 Err(err) => return Err(err),
             },
-            (bytecode::Op::Divide, lineno) => match self.numeric_binop(Binop::Div, lineno) {
+            (firnas_bytecode::Op::Divide, lineno) => match self.numeric_binop(Binop::Div, lineno) {
                 Ok(()) => {}
                 Err(err) => return Err(err),
             },
-            (bytecode::Op::Not, lineno) => {
+            (firnas_bytecode::Op::Not, lineno) => {
                 let top_stack = self.peek();
                 let maybe_bool = VirtualMachine::extract_bool(top_stack);
 
@@ -423,13 +424,13 @@ impl VirtualMachine {
                         }
                     }
             }
-            (bytecode::Op::Equal, _) => {
+            (firnas_bytecode::Op::Equal, _) => {
                 let val1 = self.pop_stack();
                 let val2 = self.pop_stack();
                 self.stack
                     .push(value::Value::Bool(self.values_equal(&val1, &val2)));
             }
-            (bytecode::Op::Greater, lineno) => {
+            (firnas_bytecode::Op::Greater, lineno) => {
                 let val1 = self.peek_by(0).clone();
                 let val2 = self.peek_by(1).clone();
 
@@ -446,7 +447,7 @@ impl VirtualMachine {
 
                     }
             }
-            (bytecode::Op::Less, lineno) => {
+            (firnas_bytecode::Op::Less, lineno) => {
                 let val1 = self.peek_by(0).clone();
                 let val2 = self.peek_by(1).clone();
 
@@ -462,14 +463,14 @@ impl VirtualMachine {
 
                     }
             }
-            (bytecode::Op::Print, _) => {
+            (firnas_bytecode::Op::Print, _) => {
                 let to_print = self.peek().clone();
                 self.print_val(&to_print);
             }
-            (bytecode::Op::Pop, _) => {
+            (firnas_bytecode::Op::Pop, _) => {
                 self.pop_stack();
             }
-            (bytecode::Op::DefineGlobal(idx), _) => {
+            (firnas_bytecode::Op::DefineGlobal(idx), _) => {
                 if let value::Value::String(name_id) = self.read_constant(idx) {
                     let val = self.pop_stack();
                     self.globals.insert(self.get_str(name_id).clone(), val);
@@ -480,7 +481,7 @@ impl VirtualMachine {
                     );
                 }
             }
-            (bytecode::Op::GetGlobal(idx), lineno) => {
+            (firnas_bytecode::Op::GetGlobal(idx), lineno) => {
                 if let value::Value::String(name_id) = self.read_constant(idx) {
                     match self.globals.get(self.get_str(name_id)) {
                         Some(val) => {
@@ -501,7 +502,7 @@ impl VirtualMachine {
                     );
                 }
             }
-            (bytecode::Op::SetGlobal(idx), lineno) => {
+            (firnas_bytecode::Op::SetGlobal(idx), lineno) => {
                 if let value::Value::String(name_id) = self.read_constant(idx) {
                     let name_str = self.get_str(name_id).clone();
                     let val = self.peek().clone();
@@ -522,17 +523,17 @@ impl VirtualMachine {
                     );
                 }
             }
-            (bytecode::Op::GetLocal(idx), _) => {
+            (firnas_bytecode::Op::GetLocal(idx), _) => {
                 let slots_offset = self.frame().slots_offset;
                 let val = self.stack[slots_offset + idx - 1].clone();
                 self.stack.push(val);
             }
-            (bytecode::Op::SetLocal(idx), _) => {
+            (firnas_bytecode::Op::SetLocal(idx), _) => {
                 let val = self.peek();
                 let slots_offset = self.frame().slots_offset;
                 self.stack[slots_offset + idx - 1] = val.clone();
             }
-            (bytecode::Op::GetUpval(idx), _) => {
+            (firnas_bytecode::Op::GetUpval(idx), _) => {
                 let upvalue = self.frame().closure.upvalues[idx].clone();
                 let val = match &*upvalue.borrow() {
                     value::Upvalue::Closed(value) => value.clone(),
@@ -540,7 +541,7 @@ impl VirtualMachine {
                 };
                 self.stack.push(val);
             }
-            (bytecode::Op::SetUpval(idx), _) => {
+            (firnas_bytecode::Op::SetUpval(idx), _) => {
                 let new_value = self.peek().clone();
                 let upvalue = self.frame().closure.upvalues[idx].clone();
                 match &mut *upvalue.borrow_mut() {
@@ -548,26 +549,26 @@ impl VirtualMachine {
                     value::Upvalue::Open(stack_index) => self.stack[*stack_index] = new_value,
                 };
             }
-            (bytecode::Op::JumpIfFalse(offset), _) => {
+            (firnas_bytecode::Op::JumpIfFalse(offset), _) => {
                 if self.is_falsey(self.peek()) {
                     self.frame_mut().ip += offset;
                 }
             }
-            (bytecode::Op::Jump(offset), _) => {
+            (firnas_bytecode::Op::Jump(offset), _) => {
                 self.frame_mut().ip += offset;
             }
-            (bytecode::Op::Loop(offset), _) => {
+            (firnas_bytecode::Op::Loop(offset), _) => {
                 self.frame_mut().ip -= offset;
             }
-            (bytecode::Op::Call(arg_count), _) => {
+            (firnas_bytecode::Op::Call(arg_count), _) => {
                 self.call_value(self.peek_by(arg_count.into()).clone(), arg_count)?;
             }
-            (bytecode::Op::CloseUpvalue, _) => {
+            (firnas_bytecode::Op::CloseUpvalue, _) => {
                 let idx = self.stack.len() - 1;
                 self.close_upvalues(idx);
                 self.stack.pop();
             }
-            (bytecode::Op::Class(idx), _) => {
+            (firnas_bytecode::Op::Class(idx), _) => {
                 if let value::Value::String(name_id) = self.read_constant(idx) {
                     let name = self.get_str(name_id).clone();
                     self.stack
@@ -582,7 +583,7 @@ impl VirtualMachine {
                     );
                 }
             }
-            (bytecode::Op::SetProperty(idx), _) => {
+            (firnas_bytecode::Op::SetProperty(idx), _) => {
                 if let value::Value::String(attr_id) = self.read_constant(idx) {
                     let val = self.pop_stack();
                     let instance = self.pop_stack();
@@ -595,7 +596,7 @@ impl VirtualMachine {
                     )
                 }
             }
-            (bytecode::Op::GetProperty(idx), _) => {
+            (firnas_bytecode::Op::GetProperty(idx), _) => {
                 if let value::Value::String(attr_id) = self.read_constant(idx) {
                     let maybe_instance = self.peek().clone();
 
@@ -625,7 +626,7 @@ impl VirtualMachine {
                     )
                 }
             }
-            (bytecode::Op::Method(idx), _) => {
+            (firnas_bytecode::Op::Method(idx), _) => {
                 if let value::Value::String(method_name_id) = self.read_constant(idx) {
                     let method_name = self.heap.get_str(method_name_id).clone();
                     let maybe_method = self.peek_by(0).clone();
@@ -648,10 +649,10 @@ impl VirtualMachine {
                     panic!("expected string when defining a method.");
                 }
             }
-            (bytecode::Op::Invoke(method_name, arg_count), _) => {
+            (firnas_bytecode::Op::Invoke(method_name, arg_count), _) => {
                 self.invoke(&method_name, arg_count)?;
             }
-            (bytecode::Op::Inherit, lineno) => {
+            (firnas_bytecode::Op::Inherit, lineno) => {
                 {
                     let (superclass_id, subclass_id) = match (self.peek_by(1), self.peek()) {
                         (value::Value::Class(superclass_id), value::Value::Class(subclass_id)) => {
@@ -674,7 +675,7 @@ impl VirtualMachine {
                 }
                 self.pop_stack(); //subclass
             }
-            (bytecode::Op::GetSuper(idx), _) => {
+            (firnas_bytecode::Op::GetSuper(idx), _) => {
                 let method_id = if let value::Value::String(method_id) = self.read_constant(idx) {
                     method_id
                 } else {
@@ -701,7 +702,7 @@ impl VirtualMachine {
                     )));
                 }
             }
-            (bytecode::Op::SuperInvoke(method_name, arg_count), _) => {
+            (firnas_bytecode::Op::SuperInvoke(method_name, arg_count), _) => {
                 let maybe_superclass = self.pop_stack();
                 let superclass_id = match maybe_superclass {
                     value::Value::Class(class_id) => class_id,
@@ -709,7 +710,7 @@ impl VirtualMachine {
                 };
                 self.invoke_from_class(superclass_id, &method_name, arg_count)?;
             }
-            (bytecode::Op::BuildList(size), _) => {
+            (firnas_bytecode::Op::BuildList(size), _) => {
                 let mut list_elements = Vec::new();
                 for _ in 0..size {
                     list_elements.push(self.pop_stack())
@@ -718,13 +719,13 @@ impl VirtualMachine {
                 self.stack
                     .push(value::Value::List(self.heap.manage_list(list_elements)));
             }
-            (bytecode::Op::Subscr, lineno) => {
+            (firnas_bytecode::Op::Subscr, lineno) => {
                 let subscript = self.pop_stack();
                 let value_to_subscript = self.pop_stack();
                 let res = self.subscript(value_to_subscript, subscript, lineno)?;
                 self.stack.push(res);
             }
-            (bytecode::Op::SetItem, lineno) => {
+            (firnas_bytecode::Op::SetItem, lineno) => {
                 let rhs = self.pop_stack();
                 let subscript = self.pop_stack();
                 let lhs = self.pop_stack();
@@ -740,7 +741,7 @@ impl VirtualMachine {
         lhs: value::Value,
         subscript: value::Value,
         rhs: value::Value,
-        lineno: bytecode::Lineno,
+        lineno: firnas_bytecode::Lineno,
     ) -> Result<(), VmError> {
         if let value::Value::List(id) = lhs {
             if let value::Value::Number(index_float) = subscript {
@@ -774,7 +775,7 @@ impl VirtualMachine {
         &mut self,
         value: value::Value,
         subscript: value::Value,
-        lineno: bytecode::Lineno,
+        lineno: firnas_bytecode::Lineno,
     ) -> Result<value::Value, VmError> {
         if let value::Value::List(id) = value {
             if let value::Value::Number(index_float) = subscript {
@@ -804,7 +805,7 @@ impl VirtualMachine {
     fn subscript_to_inbound_index(
         list_len: usize,
         index_float: f64,
-        lineno: bytecode::Lineno,
+        lineno: firnas_bytecode::Lineno,
     ) -> Result<usize, String> {
         let index_int = index_float as i64;
         if 0 <= index_int && index_int < list_len as i64 {
@@ -1063,7 +1064,11 @@ impl VirtualMachine {
         }
     }
 
-    fn numeric_binop(&mut self, binop: Binop, lineno: bytecode::Lineno) -> Result<(), VmError> {
+    fn numeric_binop(
+        &mut self,
+        binop: Binop,
+        lineno: firnas_bytecode::Lineno,
+    ) -> Result<(), VmError> {
         let val1 = self.peek_by(0).clone();
         let val2 = self.peek_by(1).clone();
 
@@ -1180,20 +1185,20 @@ impl VirtualMachine {
         self.next_op().1.value
     }
 
-    pub fn next_op(&self) -> (bytecode::Op, bytecode::Lineno) {
+    pub fn next_op(&self) -> (firnas_bytecode::Op, firnas_bytecode::Lineno) {
         self.frame().next_op()
     }
 
-    fn next_op_and_advance(&mut self) -> (bytecode::Op, bytecode::Lineno) {
+    fn next_op_and_advance(&mut self) -> (firnas_bytecode::Op, firnas_bytecode::Lineno) {
         self.frame_mut().next_op_and_advance()
     }
 
     fn read_constant(&mut self, idx: usize) -> value::Value {
         let constant = self.frame().read_constant(idx);
         match constant {
-            bytecode::Constant::Number(num) => value::Value::Number(num),
-            bytecode::Constant::String(s) => value::Value::String(self.heap.manage_str(s)),
-            bytecode::Constant::Function(f) => {
+            firnas_bytecode::Constant::Number(num) => value::Value::Number(num),
+            firnas_bytecode::Constant::String(s) => value::Value::String(self.heap.manage_str(s)),
+            firnas_bytecode::Constant::Function(f) => {
                 value::Value::Function(self.heap.manage_closure(value::Closure {
                     function: f.function,
                     upvalues: Vec::new(),

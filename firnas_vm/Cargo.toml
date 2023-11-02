@@ -7,4 +7,3 @@ edition = "2021"
 firnas_ext = { version = "*", path = "../firnas_ext" }
 firnas_bytecode = { version = "*", path = "../firnas_bytecode" }
 firnas_compiler = { version = "*", path = "../firnas_compiler" }
-firnas_tokenizer = { version = "*", path = "../firnas_tokenizer" }

@@ -1,6 +1,5 @@
-use crate::builtins;
-use crate::builtins::print;
 use crate::gc;
+use crate::stdlib;
 use crate::value;
 use firnas_bytecode;
 use firnas_bytecode::disassemble_chunk;
@@ -57,11 +56,11 @@ impl Default for VirtualMachine {
         res.frames.reserve(64);
 
         res.globals.insert(
-            String::from("printe"),
+            String::from("print_line"),
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 1,
-                name: String::from("printe"),
-                func: print,
+                name: String::from("printLine"),
+                func: stdlib::io::print_line,
             }),
         );
         res.globals.insert(
@@ -77,7 +76,7 @@ impl Default for VirtualMachine {
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 0,
                 name: String::from("clock"),
-                func: builtins::clock,
+                func: stdlib::time::clock,
             }),
         );
         res.globals.insert(
@@ -85,7 +84,7 @@ impl Default for VirtualMachine {
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 1,
                 name: String::from("exp"),
-                func: builtins::exp,
+                func: stdlib::math::exp,
             }),
         );
         res.globals.insert(
@@ -93,7 +92,7 @@ impl Default for VirtualMachine {
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 1,
                 name: String::from("sqrt"),
-                func: builtins::sqrt,
+                func: stdlib::math::sqrt,
             }),
         );
         res.globals.insert(
@@ -101,7 +100,7 @@ impl Default for VirtualMachine {
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 1,
                 name: String::from("len"),
-                func: builtins::len,
+                func: stdlib::collection::len,
             }),
         );
         res.globals.insert(
@@ -109,7 +108,7 @@ impl Default for VirtualMachine {
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 2,
                 name: String::from("forEach"),
-                func: builtins::for_each,
+                func: stdlib::collection::for_each,
             }),
         );
         res.globals.insert(
@@ -117,7 +116,7 @@ impl Default for VirtualMachine {
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 2,
                 name: String::from("map"),
-                func: builtins::map,
+                func: stdlib::collection::map,
             }),
         );
 

@@ -2,26 +2,10 @@ use crate::gc;
 use crate::stdlib;
 use crate::value;
 use firnas_bytecode;
-use firnas_bytecode::disassemble_chunk;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
-
-fn dis_builtin(interp: &mut VirtualMachine, args: &[value::Value]) -> Result<value::Value, String> {
-    // arity checking is done in the interpreter
-    match &args[0] {
-        value::Value::Function(closure_handle) => {
-            let closure = interp.heap.get_closure(*closure_handle);
-            disassemble_chunk(&closure.function.chunk, "");
-            Ok(value::Value::Nil)
-        }
-        _ => Err(format!(
-            "Invalid call: expected lox function, got {:?}.",
-            value::type_of(&args[0])
-        )),
-    }
-}
 
 #[derive(Debug)]
 enum Binop {
@@ -68,7 +52,7 @@ impl Default for VirtualMachine {
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 1,
                 name: String::from("dis"),
-                func: dis_builtin,
+                func: stdlib::debug::dis_builtin,
             }),
         );
         res.globals.insert(

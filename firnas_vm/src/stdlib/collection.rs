@@ -11,7 +11,7 @@ pub fn len(
             interp.heap.get_list_elements(*id).len() as f64,
         )),
         val => Err(format!(
-            "Ojbect of type {:?} has no len.",
+            "Object of type {:?} has no len.",
             value::type_of(val)
         )),
     }

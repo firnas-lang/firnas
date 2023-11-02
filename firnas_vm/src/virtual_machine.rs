@@ -56,7 +56,7 @@ impl Default for VirtualMachine {
         res.frames.reserve(64);
 
         res.globals.insert(
-            String::from("print_line"),
+            String::from("printLine"),
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 1,
                 name: String::from("printLine"),

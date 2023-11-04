@@ -1,8 +1,9 @@
 use clap::Parser;
 use clap::Subcommand;
+use clap::ValueEnum;
 use firnas_compiler::compiler;
 use firnas_interpreter::interpreter::Interpreter;
-use firnas_tokenizer::scanner;
+use firnas_tokenizer::tokenizer;
 use firnas_vm::virtual_machine;
 use std::fs;
 
@@ -13,30 +14,45 @@ pub struct Cli {
     command: Client,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum Extension {
+    /// Adds lists
+    Lists,
+    /// Adds lambda functions
+    Lambdas,
+}
+
 #[derive(Subcommand)]
 pub enum Client {
     /// Lunch Read-Eval-Print Loop
-    Repl,
+    Repl {
+        /// Extend the language with Work-in-Progress features
+        #[clap(short = 'X', value_parser, num_args = 1.., value_delimiter = ' ')]
+        extentions: Vec<Extension>,
+    },
     /// Compile a file
     Compile {
         /// Path to file
         path: String,
+        /// Extend the language with Work-in-Progress features
+        #[clap(short = 'X', value_parser, num_args = 1.., value_delimiter = ' ')]
+        extentions: Vec<Extension>,
     },
 }
 
 impl Client {
     pub fn execute(&self) -> anyhow::Result<()> {
         match self {
-            Self::Repl => Client::handle_repl(),
-            Self::Compile { path } => Client::handle_file(path.to_string()),
+            Self::Repl { extentions } => Client::handle_repl(extentions),
+            Self::Compile { path, extentions } => Client::handle_file(path.to_string(), extentions),
         }
     }
 
-    fn handle_repl() -> anyhow::Result<()> {
+    fn handle_repl(extentions: &Vec<Extension>) -> anyhow::Result<()> {
         println!("==== Fernas repl ====");
         let extensions = firnas_ext::Extensions {
-            lists: true,
-            lambdas: false,
+            lists: extentions.contains(&Extension::Lists),
+            lambdas: extentions.contains(&Extension::Lambdas),
         };
         let mut interpreter = Interpreter::default();
         loop {
@@ -45,18 +61,18 @@ impl Client {
             if line.is_empty() {
                 break;
             }
-            let tokens = scanner::scan_tokens(line).unwrap();
+            let tokens = tokenizer::scan_tokens(line).unwrap();
             let stmts = firnas_interpreter::parser::parse(extensions, tokens).unwrap();
             interpreter.interpret(&stmts).unwrap();
         }
         Ok(())
     }
 
-    fn handle_file(path: String) -> anyhow::Result<()> {
+    fn handle_file(path: String, extentions: &Vec<Extension>) -> anyhow::Result<()> {
         let content = fs::read_to_string(path)?;
         let extensions = firnas_ext::Extensions {
-            lists: true,
-            lambdas: false,
+            lists: extentions.contains(&Extension::Lists),
+            lambdas: extentions.contains(&Extension::Lambdas),
         };
 
         let func_or_err = compiler::Compiler::compile(content, extensions);

@@ -1,7 +1,7 @@
 use firnas_bytecode;
 use firnas_ext;
-use firnas_tokenizer::scanner;
 use firnas_tokenizer::token;
+use firnas_tokenizer::tokenizer;
 
 #[derive(Debug)]
 struct Local {
@@ -129,7 +129,7 @@ pub struct ErrorInfo {
 
 #[derive(Debug)]
 pub enum Error {
-    Lexical(scanner::Error),
+    Lexical(firnas_tokenizer::error::Error),
     Parse(ErrorInfo),
     Semantic(ErrorInfo),
     Internal(String),
@@ -151,7 +151,7 @@ impl Compiler {
             ));
         }
 
-        match scanner::scan_tokens(input) {
+        match tokenizer::scan_tokens(input) {
             Ok(tokens) => {
                 compiler.tokens = tokens;
 

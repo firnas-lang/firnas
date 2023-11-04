@@ -2,3 +2,7 @@
 name = "firnas_tokenizer"
 version = "0.1.0"
 edition = "2021"
+
+[features]
+default = ["en"]
+en = []

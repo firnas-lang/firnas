@@ -1,3 +1,4 @@
+use crate::error::Error;
 use crate::token::Literal;
 use crate::token::Token;
 use crate::token::TokenType;
@@ -12,13 +13,6 @@ pub fn scan_tokens(input: String) -> Result<Vec<Token>, Error> {
         Some(err) => Err(err),
         None => Ok(scanner.tokens),
     }
-}
-
-#[derive(Debug)]
-pub struct Error {
-    pub what: String,
-    pub line: usize,
-    pub col: i64,
 }
 
 struct Scanner {

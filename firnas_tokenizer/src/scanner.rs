@@ -75,7 +75,7 @@ impl Scanner {
             Some(_) => {}
             None => self.tokens.push(Token {
                 ty: TokenType::Eof,
-                lexeme: Vec::new(),
+                lexeme: String::new(),
                 literal: None,
                 line: self.line,
                 col: self.col,
@@ -288,10 +288,11 @@ impl Scanner {
 
     fn add_token_literal(&mut self, token_type: TokenType, literal: Option<Literal>) {
         let text = self.source[self.start..self.current].to_vec();
+        let lexeme = String::from_utf8(text).unwrap();
 
         self.tokens.push(Token {
             ty: token_type,
-            lexeme: text,
+            lexeme,
             literal,
             line: self.line,
             col: self.col,

@@ -10,7 +10,7 @@ pub enum Literal {
 #[derive(Clone)]
 pub struct Token {
     pub ty: TokenType,
-    pub lexeme: Vec<u8>,
+    pub lexeme: String,
     pub literal: Option<Literal>,
     pub line: usize,
     pub col: i64,
@@ -27,11 +27,7 @@ impl fmt::Debug for Token {
         write!(
             f,
             "Token {{ ty: {:?}, lexeme: \"{}\", literal: {:?}, line: {:?}, col: {:?}}}",
-            self.ty,
-            String::from_utf8(self.lexeme.clone()).unwrap(),
-            self.literal,
-            self.line,
-            self.col
+            self.ty, self.lexeme, self.literal, self.line, self.col
         )
     }
 }

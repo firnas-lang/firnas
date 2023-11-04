@@ -137,7 +137,7 @@ fn test_for() {
 }
 
 #[test]
-fn test_lox_funcs() {
+fn test_firnas_funcs() {
     check_output_default(
         "fun sayHi(first, last) {\n\
                return \"Hi, \" + first + \" \" + last + \"!\";\n\

@@ -13,7 +13,7 @@ pub(crate) fn dis_builtin(
             Ok(value::Value::Nil)
         }
         _ => Err(format!(
-            "Invalid call: expected lox function, got {:?}.",
+            "Invalid call: expected firnas function, got {:?}.",
             value::type_of(&args[0])
         )),
     }

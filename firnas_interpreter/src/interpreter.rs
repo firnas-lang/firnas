@@ -178,7 +178,7 @@ impl LoxClass {
     fn init(&self, interpreter: &Interpreter) -> Option<LoxFunction> {
         self.methods
             .get(&String::from(INIT))
-            .map(|initializer_id| interpreter.get_lox_function(*initializer_id).clone())
+            .map(|initializer_id| interpreter.get_firnas_function(*initializer_id).clone())
     }
 
     fn find_method(
@@ -187,11 +187,11 @@ impl LoxClass {
         interpreter: &Interpreter,
     ) -> Option<(expr::Symbol, u64)> {
         if let Some(method_id) = self.methods.get(method_name) {
-            let lox_fn = interpreter.get_lox_function(*method_id);
-            return Some((lox_fn.name.clone(), *method_id));
+            let firnas_fn = interpreter.get_firnas_function(*method_id);
+            return Some((firnas_fn.name.clone(), *method_id));
         } else if let Some(superclass_id) = self.superclass {
             return interpreter
-                .get_lox_class(superclass_id)
+                .get_firnas_class(superclass_id)
                 .find_method(method_name, interpreter);
         }
         None
@@ -211,7 +211,7 @@ impl LoxInstance {
         match self.fields.get(attr) {
             Some(val) => Ok(val.clone()),
             None => {
-                let cls = interpreter.get_lox_class(self.class_id);
+                let cls = interpreter.get_firnas_class(self.class_id);
                 if let Some((func_name, method_id)) = cls.find_method(attr, interpreter) {
                     return Ok(Value::LoxFunction(
                         func_name,
@@ -252,12 +252,12 @@ fn as_callable(interpreter: &Interpreter, value: &Value) -> Option<Box<dyn Calla
     match value {
         Value::NativeFunction(f) => Some(Box::new(f.clone())),
         Value::LoxFunction(_, id, this_binding) => {
-            let f = interpreter.get_lox_function(*id);
+            let f = interpreter.get_firnas_function(*id);
             let mut f_copy = f.clone();
             f_copy.this_binding = this_binding.clone();
             Some(Box::new(f_copy))
         }
-        Value::LoxClass(_, id) => Some(Box::new(interpreter.get_lox_class(*id).clone())),
+        Value::LoxClass(_, id) => Some(Box::new(interpreter.get_firnas_class(*id).clone())),
         _ => None,
     }
 }
@@ -380,9 +380,9 @@ impl Environment {
 pub struct Interpreter {
     pub counter: u64,
     pub lambda_counter: u64,
-    pub lox_functions: HashMap<u64, LoxFunction>,
-    pub lox_instances: HashMap<u64, LoxInstance>,
-    pub lox_classes: HashMap<u64, LoxClass>,
+    pub firnas_functions: HashMap<u64, LoxFunction>,
+    pub firnas_instances: HashMap<u64, LoxInstance>,
+    pub firnas_classes: HashMap<u64, LoxClass>,
     pub lists: HashMap<u64, Vec<Value>>,
     pub env: Environment,
     pub globals: Environment,
@@ -546,9 +546,9 @@ impl Default for Interpreter {
         Interpreter {
             counter: 0,
             lambda_counter: 0,
-            lox_functions: Default::default(),
-            lox_instances: Default::default(),
-            lox_classes: Default::default(),
+            firnas_functions: Default::default(),
+            firnas_instances: Default::default(),
+            firnas_classes: Default::default(),
             lists: Default::default(),
             env: Default::default(),
             globals,
@@ -570,8 +570,8 @@ impl Interpreter {
         Ok(())
     }
 
-    pub fn get_lox_function(&self, id: u64) -> &LoxFunction {
-        match self.lox_functions.get(&id) {
+    pub fn get_firnas_function(&self, id: u64) -> &LoxFunction {
+        match self.firnas_functions.get(&id) {
             Some(func) => func,
             None => panic!(
                 "Internal interpreter error! couldn't find an function with id {}.",
@@ -580,8 +580,8 @@ impl Interpreter {
         }
     }
 
-    pub fn get_lox_class(&self, id: u64) -> &LoxClass {
-        match self.lox_classes.get(&id) {
+    pub fn get_firnas_class(&self, id: u64) -> &LoxClass {
+        match self.firnas_classes.get(&id) {
             Some(func) => func,
             None => panic!(
                 "Internal interpreter error! couldn't find class with id {}.",
@@ -590,8 +590,8 @@ impl Interpreter {
         }
     }
 
-    pub fn get_lox_instance(&self, id: u64) -> &LoxInstance {
-        match self.lox_instances.get(&id) {
+    pub fn get_firnas_instance(&self, id: u64) -> &LoxInstance {
+        match self.firnas_instances.get(&id) {
             Some(inst) => inst,
             None => panic!(
                 "Internal interpreter error: could not find an instance with id {}.",
@@ -651,7 +651,7 @@ impl Interpreter {
             id: inst_id,
             fields: HashMap::new(),
         };
-        self.lox_instances.insert(inst_id, inst);
+        self.firnas_instances.insert(inst_id, inst);
         Value::LoxInstance(class_name.clone(), inst_id)
     }
 
@@ -704,7 +704,7 @@ impl Interpreter {
 
                     let is_initializer = method.name.name == INIT;
 
-                    let lox_function = LoxFunction {
+                    let firnas_function = LoxFunction {
                         id: func_id,
                         name: method.name.clone(),
                         parameters: method.params.clone(),
@@ -715,7 +715,7 @@ impl Interpreter {
                         is_initializer,
                     };
 
-                    self.lox_functions.insert(func_id, lox_function);
+                    self.firnas_functions.insert(func_id, firnas_function);
                 }
 
                 let cls = LoxClass {
@@ -725,7 +725,7 @@ impl Interpreter {
                     methods,
                 };
 
-                self.lox_classes.insert(class_id, cls);
+                self.firnas_classes.insert(class_id, cls);
                 Ok(())
             }
             expr::Stmt::FunDecl(expr::FunDecl {
@@ -739,7 +739,7 @@ impl Interpreter {
                     Some(Value::LoxFunction(name.clone(), func_id, None)),
                 );
 
-                let lox_function = LoxFunction {
+                let firnas_function = LoxFunction {
                     id: func_id,
                     name: name.clone(),
                     parameters: parameters.clone(),
@@ -750,7 +750,7 @@ impl Interpreter {
                     is_initializer: false,
                 };
 
-                self.lox_functions.insert(func_id, lox_function);
+                self.firnas_functions.insert(func_id, firnas_function);
 
                 Ok(())
             }
@@ -876,12 +876,12 @@ impl Interpreter {
             }
             expr::Expr::Super(source_location, sym) => match self.enclosing_function {
                 Some(func_id) => {
-                    let func = self.get_lox_function(func_id);
+                    let func = self.get_firnas_function(func_id);
                     match &func.superclass {
                         Some(superclass_id) => {
-                            let superclass = self.get_lox_class(*superclass_id);
+                            let superclass = self.get_firnas_class(*superclass_id);
                             if let Some((func_name, method_id)) = superclass.find_method(&sym.name, self) {
-                                let method = self.get_lox_function(method_id);
+                                let method = self.get_firnas_function(method_id);
                                 Ok(Value::LoxFunction(
                                     func_name,
                                     method.id,
@@ -1025,7 +1025,7 @@ impl Interpreter {
     fn getattr(&mut self, lhs: &expr::Expr, attr: &str) -> Result<Value, String> {
         let val = self.interpret_expr(lhs)?;
         match val {
-            Value::LoxInstance(_, id) => self.get_lox_instance(id).getattr(attr, self),
+            Value::LoxInstance(_, id) => self.get_firnas_instance(id).getattr(attr, self),
             _ => Err(format!(
                 "Only LoxInstance values have attributes. Found {:?}.",
                 type_of(&val)
@@ -1042,7 +1042,7 @@ impl Interpreter {
         let lhs = self.interpret_expr(lhs_exp)?;
         let rhs = self.interpret_expr(rhs_exp)?;
         match lhs {
-            Value::LoxInstance(_, id) => match self.lox_instances.get_mut(&id) {
+            Value::LoxInstance(_, id) => match self.firnas_instances.get_mut(&id) {
                 Some(inst) => {
                     inst.fields.insert(attr.name.clone(), rhs.clone());
                     Ok(rhs)

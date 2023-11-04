@@ -11,10 +11,10 @@ fn evaluate(code: &str, extensions: firnas_ext::Extensions) -> Result<Vec<String
 
     match func_or_err {
         Ok(func) => {
-            let mut interp = VirtualMachine::default();
-            let res = interp.interpret(func);
+            let mut vm = VirtualMachine::default();
+            let res = vm.interpret(func);
             match res {
-                Ok(()) => Ok(interp.get_output()),
+                Ok(()) => Ok(vm.get_output()),
                 Err(VmError::Runtime(err)) => Err(err),
             }
         }
@@ -63,75 +63,85 @@ fn check_error_default(code: &str, f: &dyn Fn(&str) -> ()) {
 }
 
 #[test]
-fn test_var_reading_1() {
+fn it_should_print_var_value() {
     check_output_default("var x = 2; print x;", &vec_of_strings!["2"]);
 }
 
 #[test]
-fn test_var_reading_locals_1() {
+fn it_should_print_var_value_in_scope() {
     check_output_default("{var x = 2; print x;}", &vec_of_strings!["2"]);
 }
 
 #[test]
-fn test_var_reading_4() {
+fn it_should_print_var_value_after_mutation() {
     check_output_default(
-        "var x = 2;\n\
-         var y = 3;\n\
-         print x * y + 4;",
+        r#"
+var x = 2;
+var y = 3;
+print x * y + 4;
+"#,
         &vec_of_strings!["10"],
     );
 }
 
 #[test]
-fn test_var_reading_locals_2() {
+fn it_should_print_var_value_after_mutation_in_scope() {
     check_output_default(
-        "{\n\
-           var x = 2;\n\
-           var y = 3;\n\
-           print x * y + 4;\n\
-         }\n",
+        r#"
+{
+    var x = 2;
+    var y = 3;
+    print x * y + 4;
+}
+"#,
         &vec_of_strings!["10"],
     );
 }
 
 #[test]
-fn test_div_by_zero() {
+fn it_should_return_inf_when_dividing_by_zero() {
     check_output_default("print 1 / 0;", &vec_of_strings!["inf"]);
 }
 
 #[test]
-fn test_setitem_globals() {
+fn it_should_set_items_global() {
     check_output_default(
-        "var breakfast = \"beignets\";\n\
-         var beverage = \"cafe au lait\";\n\
-         breakfast = \"beignets with \" + beverage;\n\
-         print breakfast;",
+        r#"
+var breakfast = "beignets";
+var beverage = "cafe au lait";
+breakfast = "beignets with " + beverage;
+print breakfast;
+"#,
         &vec_of_strings!["beignets with cafe au lait"],
     );
 }
 
 #[test]
-fn test_setitem_locals() {
+fn it_should_set_items_in_scope() {
     check_output_default(
-        "{\n\
-           var breakfast = \"beignets\";\n\
-           var beverage = \"cafe au lait\";\n\
-           breakfast = \"beignets with \" + beverage;\n\
-           print breakfast;\n\
-         }\n",
+        r#"
+{
+    var breakfast = "beignets";
+    var beverage = "cafe au lait";
+    breakfast = "beignets with " + beverage;
+    print breakfast;
+}
+"#,
         &vec_of_strings!["beignets with cafe au lait"],
     );
 }
 
 #[test]
-fn test_read_in_own_initializer() {
+fn it_should_fail_on_read_from_own_initializer() {
     check_error_default(
-        "{\n\
-           var a = \"outer\";\n\
-           {\n\
-             var a = a;\n\
-           }\n\
-         }\n",
+        r#"
+{
+    var a = "outer";
+    {
+        var a = a;
+    }
+}
+"#,
         &|err: &str| assert!(err.starts_with("Cannot read local variable in its own initializer.")),
     )
 }
@@ -139,14 +149,16 @@ fn test_read_in_own_initializer() {
 #[test]
 fn test_if_stmt() {
     check_output_default(
-        "var x = 0;\n\
-         var y = 1;\n\
-         if (x) {\n\
-           print x;\n\
-         }\n\
-         if (y) {\n\
-           print y;\n\
-         }",
+        r#"
+var x = 0;
+var y = 1;
+if (x) {
+    print x;
+}
+if (y) {
+    print y;
+}
+"#,
         &vec_of_strings!["1"],
     );
 }
@@ -154,12 +166,14 @@ fn test_if_stmt() {
 #[test]
 fn test_if_then_else_1() {
     check_output_default(
-        "var x = 0;\n\
-         if (x) {\n\
-           print \"hello\";\n\
-         } else {\n\
-           print \"goodbye\";\n\
-         }",
+        r#"
+var x = 0;
+if (x) {
+    print "hello";
+} else {
+    print "goodbye";
+}
+"#,
         &vec_of_strings!["goodbye"],
     );
 }
@@ -167,12 +181,14 @@ fn test_if_then_else_1() {
 #[test]
 fn test_if_then_else_2() {
     check_output_default(
-        "var x = 1;\n\
-         if (x) {\n\
-           print \"hello\";\n\
-         } else {\n\
-           print \"goodbye\";\n\
-         }",
+        r#"
+var x = 1;
+if (x) {
+    print "hello";
+} else {
+    print "goodbye";
+}
+"#,
         &vec_of_strings!["hello"],
     );
 }
@@ -180,12 +196,14 @@ fn test_if_then_else_2() {
 #[test]
 fn test_print_locals() {
     check_output_default(
-        "{\n\
-           var x = 0;\n\
-           var y = 1;\n\
-           print x;\n\
-           print y;\n\
-         }",
+        r#"
+{
+    var x = 0;
+    var y = 1;
+    print x;
+    print y;
+}
+"#,
         &vec_of_strings!["0", "1"],
     );
 }
@@ -193,10 +211,12 @@ fn test_print_locals() {
 #[test]
 fn test_print_globals() {
     check_output_default(
-        "var x = 0;\n\
-         var y = 1;\n\
-         print x;\n\
-         print y;\n",
+        r#"
+var x = 0;
+var y = 1;
+print x;
+print y;
+"#,
         &vec_of_strings!["0", "1"],
     );
 }
@@ -204,13 +224,15 @@ fn test_print_globals() {
 #[test]
 fn test_and_1() {
     check_output_default(
-        "var x = false;\n\
-         var y = true;\n\
-         if (y and x) {\n\
-           print \"cat\";\n\
-         } else {\n\
-           print \"dog\";\n\
-         }\n",
+        r#"
+var x = false;
+var y = true;
+if (y and x) {
+    print "cat";
+} else {
+    print "dog";
+}
+"#,
         &vec_of_strings!["dog"],
     );
 }
@@ -218,13 +240,15 @@ fn test_and_1() {
 #[test]
 fn test_and_2() {
     check_output_default(
-        "var x = false;\n\
-         var y = true;\n\
-         if (x and y) {\n\
-           print \"cat\";\n\
-         } else {\n\
-           print \"dog\";\n\
-         }\n",
+        r#"
+var x = false;
+var y = true;
+if (x and y) {
+    print "cat";
+} else {
+print "dog";
+}
+"#,
         &vec_of_strings!["dog"],
     );
 }
@@ -232,13 +256,15 @@ fn test_and_2() {
 #[test]
 fn test_and_3() {
     check_output_default(
-        "var x = true;\n\
-         var y = true;\n\
-         if (y and x) {\n\
-           print \"cat\";\n\
-         } else {\n\
-           print \"dog\";\n\
-         }\n",
+        r#"
+var x = true;
+var y = true;
+if (y and x) {
+    print "cat";
+} else {
+    print "dog";
+}
+"#,
         &vec_of_strings!["cat"],
     );
 }
@@ -246,13 +272,15 @@ fn test_and_3() {
 #[test]
 fn test_or_1() {
     check_output_default(
-        "var x = false;\n\
-         var y = true;\n\
-         if (y or x) {\n\
-           print \"cat\";\n\
-         } else {\n\
-           print \"dog\";\n\
-         }\n",
+        r#"
+var x = false;
+var y = true;
+if (y or x) {
+    print "cat";
+} else {
+    print "dog";
+}
+"#,
         &vec_of_strings!["cat"],
     );
 }
@@ -260,13 +288,15 @@ fn test_or_1() {
 #[test]
 fn test_or_2() {
     check_output_default(
-        "var x = false;\n\
-         var y = true;\n\
-         if (x or y) {\n\
-           print \"cat\";\n\
-         } else {\n\
-           print \"dog\";\n\
-         }\n",
+        r#"
+var x = false;
+var y = true;
+if (x or y) {
+    print "cat";
+} else {
+    print "dog";
+}
+"#,
         &vec_of_strings!["cat"],
     );
 }
@@ -274,13 +304,15 @@ fn test_or_2() {
 #[test]
 fn test_or_3() {
     check_output_default(
-        "var x = false;\n\
-         var y = false;\n\
-         if (y or x) {\n\
-           print \"cat\";\n\
-         } else {\n\
-           print \"dog\";\n\
-         }\n",
+        r#"
+var x = false;
+var y = false;
+if (y or x) {
+    print "cat";
+} else {
+    print "dog";
+}
+"#,
         &vec_of_strings!["dog"],
     );
 }
@@ -288,13 +320,17 @@ fn test_or_3() {
 #[test]
 fn test_while() {
     check_output_default(
-        "{var x = 0;\n\
-         var sum = 0;\n\
-         while (x < 100) {\n\
-           x = x + 1;\n\
-           sum = sum + x;\n\
-         }\n\
-         print sum;}",
+        r#"
+{
+    var x = 0;
+    var sum = 0;
+    while (x < 100) {
+        x = x + 1;
+        sum = sum + x;
+    }
+    print sum;
+}
+"#,
         &vec_of_strings!["5050"],
     );
 }
@@ -309,13 +345,15 @@ fn test_for() {
     }
 
     check_output_default(
-        "{\n\
-           var fact = 1;\n\
-           for (var i = 1; i <= 10; i = i + 1) {\n\
-             fact = fact * i;\n\
-           }\n\
-           print fact;\n\
-         }",
+        r#"
+{
+    var fact = 1;
+    for (var i = 1; i <= 10; i = i + 1) {
+        fact = fact * i;
+    }
+    print fact;
+}
+"#,
         &vec_of_strings![format!("{}", fact(10))],
     );
 }
@@ -323,11 +361,13 @@ fn test_for() {
 #[test]
 fn test_functions_1() {
     check_output_default(
-        "fun areWeHavingItYet() {\n\
-           print \"Yes we are!\";\n\
-         }\n\
-         \n\
-         print areWeHavingItYet;\n",
+        r#"
+fun areWeHavingItYet() {
+    print "Yes we are!";
+}
+
+print areWeHavingItYet;
+"#,
         &vec_of_strings!["<fn 'areWeHavingItYet'>"],
     )
 }
@@ -335,11 +375,13 @@ fn test_functions_1() {
 #[test]
 fn test_functions_2() {
     check_output_default(
-        "fun f(x, y) {\n\
-           print x + y;\n\
-         }\n\
-         \n\
-         print f;\n",
+        r#"
+fun f(x, y) {
+    print x + y;
+}
+
+print f;
+"#,
         &vec_of_strings!["<fn 'f'>"],
     )
 }
@@ -347,11 +389,13 @@ fn test_functions_2() {
 #[test]
 fn test_functions_3() {
     check_output_default(
-        "fun f(x, y) {\n\
-           return x + y;\n\
-         }\n\
-         \n\
-         print f;\n",
+        r#"
+fun f(x, y) {
+    return x + y;
+}
+
+print f;
+"#,
         &vec_of_strings!["<fn 'f'>"],
     )
 }
@@ -359,11 +403,13 @@ fn test_functions_3() {
 #[test]
 fn test_functions_4() {
     check_output_default(
-        "fun f() {\n\
-           return;\n\
-         }\n\
-         \n\
-         print f();\n",
+        r#"
+fun f() {
+    return;
+}
+
+print f();
+"#,
         &vec_of_strings!["nil"],
     )
 }
@@ -378,11 +424,13 @@ fn test_functions_5() {
 #[test]
 fn test_functions_6() {
     check_output_default(
-        "fun f(x, y) {\n\
-           return x + y;\n\
-         }\n\
-         \n\
-         print f(1,2);\n",
+        r#"
+fun f(x, y) {
+    return x + y;
+}
+
+print f(1,2);
+"#,
         &vec_of_strings!["3"],
     );
 }
@@ -390,15 +438,17 @@ fn test_functions_6() {
 #[test]
 fn test_functions_7() {
     check_output_default(
-        "fun g(x) {\n\
-           return 2 * x;\n\
-         }\n\
-         \n\
-         fun f(x, y) {\n\
-           return g(x) + y;\n\
-         }\n\
-         \n\
-         print f(1,2);\n",
+        r#"
+fun g(x) {
+    return 2 * x;
+}
+
+fun f(x, y) {
+    return g(x) + y;
+}
+
+print f(1,2);
+"#,
         &vec_of_strings!["4"],
     );
 }
@@ -406,13 +456,15 @@ fn test_functions_7() {
 #[test]
 fn test_functions_8() {
     check_output_default(
-        "var x = 2;\n\
-         fun f(x) {\n\
-           print 2 * x;\n\
-         }\n\
-         \n\
-         f(x);\n\
-         print x;\n",
+        r#"
+var x = 2;
+fun f(x) {
+    print 2 * x;
+}
+
+f(x);
+print x;
+"#,
         &vec_of_strings!["4", "2"],
     );
 }
@@ -427,12 +479,14 @@ fn test_functions_9() {
     }
 
     check_output_default(
-        "fun fact(n) {\n\
-           if (n <= 1) { return 1; }\n\
-           return n * fact(n - 1);\n\
-         }\n\
-         \n\
-         print fact(10);\n",
+        r#"
+fun fact(n) {
+    if (n <= 1) { return 1; }
+    return n * fact(n - 1);
+}
+
+print fact(10);
+"#,
         &vec_of_strings![format!("{}", fact(10))],
     );
 }
@@ -440,16 +494,19 @@ fn test_functions_9() {
 #[test]
 fn test_functions_10() {
     check_output_default(
-        "fun isEven(n) {\n\
-           if (n = 0) { return true; }\n\
-           return isOdd(n - 1);\n\
-         }\n\
-         fun isOdd(n) {\n\
-           if (n = 1) { return true; }\n\
-           return isEven(n - 1);\n\
-         }\n\
-         \n\
-         print isEven(10);\n",
+        r#"
+fun isEven(n) {
+    if (n = 0) { return true; }
+    return isOdd(n - 1);
+}
+
+fun isOdd(n) {
+    if (n = 1) { return true; }
+    return isEven(n - 1);
+}
+
+print isEven(10);
+"#,
         &vec_of_strings!["true"],
     );
 }
@@ -457,15 +514,17 @@ fn test_functions_10() {
 #[test]
 fn test_native_functions() {
     let res = evaluate(
-        "fun fib(n) {\n\
-           if (n < 2) return n;\n\
-           return fib(n - 2) + fib(n - 1);\n\
-         }\n\
-         \n\
-         var start = clock();\n\
-         print fib(5);\n\
-         print clock() - start;\n\
-         print 42;",
+        r#"
+fun fib(n) {
+    if (n < 2) return n;
+    return fib(n - 2) + fib(n - 1);
+}
+
+var start = clock();
+print fib(5);
+print clock() - start;
+print 42;
+"#,
         firnas_ext::Extensions::default(),
     );
 
@@ -484,14 +543,16 @@ fn test_native_functions() {
 #[test]
 fn test_get_upval_on_stack() {
     check_output_default(
-        "fun outer() {\n\
-           var x = \"outside\";\n\
-           fun inner() {\n\
-             print x;\n\
-           }\n\
-           inner();\n\
-         }\n\
-         outer();",
+        r#"
+fun outer() {
+    var x = "outside";
+    fun inner() {
+        print x;
+    }
+    inner();
+}
+outer();
+"#,
         &vec_of_strings!["outside"],
     );
 }
@@ -499,15 +560,17 @@ fn test_get_upval_on_stack() {
 #[test]
 fn test_set_upval_on_stack() {
     check_output_default(
-        "fun outer() {\n\
-           var x = \"before\";\n\
-           fun inner() {\n\
-             x = \"assigned\";\n\
-           }\n\
-           inner();\n\
-           print x;\n\
-         }\n\
-         outer();",
+        r#"
+fun outer() {
+    var x = "before";
+    fun inner() {
+        x = "assigned";
+    }
+    inner();
+    print x;
+}
+outer();
+"#,
         &vec_of_strings!["assigned"],
     );
 }
@@ -515,17 +578,19 @@ fn test_set_upval_on_stack() {
 #[test]
 fn test_closing_upvals_after_return() {
     check_output_default(
-        "fun outer() {\n\
-           var x = \"outside\";\n\
-           fun inner() {\n\
-             print x;\n\
-           }\n\
-           \n\
-           return inner;\n\
-        }\n\
-        \n\
-        var closure = outer();\n\
-        closure();",
+        r#"
+fun outer() {
+    var x = "outside";
+    fun inner() {
+        print x;
+    }
+
+    return inner;
+}
+
+var closure = outer();
+closure();
+"#,
         &vec_of_strings!["outside"],
     );
 }
@@ -533,17 +598,19 @@ fn test_closing_upvals_after_return() {
 #[test]
 fn test_closing_upvals_after_scope() {
     check_output_default(
-        "var closure;\n\
-         {\n\
-           var x = \"outside\";\n\
-           fun inner() {\n\
-             print x;\n\
-           }\n\
-           \n\
-           closure = inner;\n\
-        }\n\
-        \n\
-        closure();",
+        r#"
+var closure;
+{
+    var x = "outside";
+    fun inner() {
+        print x;
+    }
+
+    closure = inner;
+}
+
+closure();
+"#,
         &vec_of_strings!["outside"],
     );
 }
@@ -551,8 +618,10 @@ fn test_closing_upvals_after_scope() {
 #[test]
 fn test_classes_1() {
     check_output_default(
-        "class Brioche {}\n\
-         print Brioche;\n",
+        r#"
+class Brioche {}
+print Brioche;
+"#,
         &vec_of_strings!["<class 'Brioche'>"],
     );
 }
@@ -560,9 +629,11 @@ fn test_classes_1() {
 #[test]
 fn test_classes_instances_1() {
     check_output_default(
-        "class Brioche {}\n\
-         var instance = Brioche();\n\
-         print instance;\n",
+        r#"
+class Brioche {}
+var instance = Brioche();
+print instance;
+"#,
         &vec_of_strings!["<Brioche instance>"],
     );
 }
@@ -570,10 +641,12 @@ fn test_classes_instances_1() {
 #[test]
 fn test_setattr_1() {
     check_output_default(
-        "class Foo {}\n\
-         var foo = Foo();\n\
-         foo.attr = 42;\n\
-         print foo.attr;\n",
+        r#"
+class Foo {}
+var foo = Foo();
+foo.attr = 42;
+print foo.attr;
+"#,
         &vec_of_strings!["42"],
     );
 }
@@ -581,9 +654,11 @@ fn test_setattr_1() {
 #[test]
 fn test_setattr_2() {
     check_output_default(
-        "class Toast {}\n\
-         var toast = Toast();\n\
-         print toast.jam = \"grape\";",
+        r#"
+class Toast {}
+var toast = Toast();
+print toast.jam = "grape";
+"#,
         &vec_of_strings!["grape"],
     );
 }
@@ -591,11 +666,13 @@ fn test_setattr_2() {
 #[test]
 fn test_setattr_3() {
     check_output_default(
-        "class Pair {}\n\
-         var pair = Pair();\n\
-         pair.first = 1;\n\
-         pair.second = 2;\n\
-         print pair.first + pair.second;",
+        r#"
+class Pair {}
+var pair = Pair();
+pair.first = 1;
+pair.second = 2;
+print pair.first + pair.second;
+"#,
         &vec_of_strings!["3"],
     );
 }
@@ -603,13 +680,16 @@ fn test_setattr_3() {
 #[test]
 fn test_bound_methods_1() {
     check_output_default(
-        "class Foo {\n\
-           bar() {\n\
-             return 42;
-           }\n\
-         }\n\
-         var foo = Foo();\n\
-         print foo.bar;",
+        r#"
+class Foo {
+    bar() {
+        return 42;
+    }
+}
+
+var foo = Foo();
+print foo.bar;
+"#,
         &vec_of_strings!["<bound method of Foo instance>"],
     );
 }
@@ -617,14 +697,16 @@ fn test_bound_methods_1() {
 #[test]
 fn test_calling_bound_methods_no_this() {
     check_output_default(
-        "class Scone {\n\
-           topping(first, second) {\n\
-             print \"scone with \" + first + \" and \" + second;\n\
-           }\n\
-         }\n\
-         \n\
-         var scone = Scone();\n\
-         scone.topping(\"berries\", \"cream\");",
+        r#"
+class Scone {
+    topping(first, second) {
+        print "scone with " + first + " and " + second;
+    }
+}
+
+var scone = Scone();
+scone.topping("berries", "cream");
+"#,
         &vec_of_strings!["scone with berries and cream"],
     );
 }
@@ -632,13 +714,15 @@ fn test_calling_bound_methods_no_this() {
 #[test]
 fn test_calling_bound_methods_with_this_1() {
     check_output_default(
-        "class Nested {\n\
-           method() {\n\
-             print this;\n\
-           }\n\
-         }\n\
-         \n\
-         Nested().method();",
+        r#"
+class Nested {
+    method() {
+        print this;
+    }
+}
+
+Nested().method();
+"#,
         &vec_of_strings!["<Nested instance>"],
     );
 }
@@ -646,17 +730,19 @@ fn test_calling_bound_methods_with_this_1() {
 #[test]
 fn test_calling_bound_methods_with_this_2() {
     check_output_default(
-        "class Nested {\n\
-           method() {\n\
-             fun function() {\n\
-               print this;\n\
-             }\n\
-             \n\
-             function();\n\
-           }\n\
-         }\n\
-         \n\
-         Nested().method();",
+        r#"
+class Nested {
+    method() {
+        fun function() {
+            print this;
+        }
+
+        function();
+    }
+}
+
+Nested().method();
+"#,
         &vec_of_strings!["<Nested instance>"],
     );
 }
@@ -664,11 +750,13 @@ fn test_calling_bound_methods_with_this_2() {
 #[test]
 fn test_multiple_method_definitions() {
     check_output_default(
-        "class Brunch {\n\
-           bacon() {}\n\
-           eggs() {}\n\
-         }\n\
-         print Brunch().bacon();",
+        r#"
+class Brunch {
+    bacon() {}
+    eggs() {}
+}
+print Brunch().bacon();
+"#,
         &vec_of_strings!["nil"],
     );
 }
@@ -676,11 +764,13 @@ fn test_multiple_method_definitions() {
 #[test]
 fn test_init_1() {
     check_output_default(
-        "class Brunch {\n\
-           init(x) {this.x = x;}\n\
-           eggs(y) {return this.x + y;}\n\
-         }\n\
-         print Brunch(2).eggs(3);",
+        r#"
+class Brunch {
+    init(x) {this.x = x;}
+    eggs(y) {return this.x + y;}
+}
+print Brunch(2).eggs(3);
+"#,
         &vec_of_strings!["5"],
     );
 }
@@ -688,18 +778,20 @@ fn test_init_1() {
 #[test]
 fn test_invoking_fields() {
     check_output_default(
-        "class Oops {\n\
-           init() {\n\
-             fun f() {\n\
-               print \"not a method\";\n\
-             }\n\
-             \n\
-             this.field = f;\n\
-           }\n\
-         }\n\
-         \n\
-         var oops = Oops();\n\
-         oops.field();\n",
+        r#"
+class Oops {
+    init() {
+        fun f() {
+            print "not a method";
+        }
+
+        this.field = f;
+    }
+}
+
+var oops = Oops();
+oops.field();
+"#,
         &vec_of_strings!["not a method"],
     );
 }
@@ -707,14 +799,16 @@ fn test_invoking_fields() {
 #[test]
 fn test_inheritance_1() {
     check_output_default(
-        "class A {\n\
-           f() {\n\
-             return \"cat\";\n\
-           }\n\
-         }\n\
-         class B < A {}\n\
-         var b = B();\n\
-         print b.f();",
+        r#"
+class A {
+    f() {
+        return "cat";
+    }
+}
+class B < A {}
+var b = B();
+print b.f();
+"#,
         &vec_of_strings!["cat"],
     );
 }
@@ -722,15 +816,17 @@ fn test_inheritance_1() {
 #[test]
 fn test_inheritance_2() {
     check_output_default(
-        "class A {\n\
-           f() {\n\
-             return \"cat\";\n\
-           }\n\
-         }\n\
-         class B < A {}\n\
-         class C < B {}\n\
-         var c = C();\n\
-         print c.f();",
+        r#"
+class A {
+    f() {
+        return "cat";
+    }
+}
+class B < A {}
+class C < B {}
+var c = C();
+print c.f();
+"#,
         &vec_of_strings!["cat"],
     );
 }
@@ -738,18 +834,21 @@ fn test_inheritance_2() {
 #[test]
 fn test_inheritance_3() {
     check_output_default(
-        "class A {\n\
-           f() {\n\
-             return this.attr;
-           }\n\
-         }\n\
-         class B < A {\n\
-           init(attr) {\n\
-             this.attr = attr;\n\
-           }\n\
-         }\n\
-         var b = B(42);\n\
-         print b.f();",
+        r#"
+class A {
+    f() {
+        return this.attr;
+    }
+}
+class B < A {
+    init(attr) {
+        this.attr = attr;
+    }
+}
+
+var b = B(42);
+print b.f();
+"#,
         &vec_of_strings!["42"],
     );
 }
@@ -757,16 +856,18 @@ fn test_inheritance_3() {
 #[test]
 fn test_inheritance_4() {
     check_output_default(
-        "class A {\n\
-           f() {\n\
-             return this.attr;
-           }\n\
-         }\n\
-         class B < A {\n\
-         }\n\
-         var b = B();\n\
-         b.attr = 42;
-         print b.f();",
+        r#"
+class A {
+    f() {
+        return this.attr;
+    }
+}
+class B < A {
+}
+var b = B();
+b.attr = 42;
+print b.f();
+"#,
         &vec_of_strings!["42"],
     );
 }
@@ -774,8 +875,10 @@ fn test_inheritance_4() {
 #[test]
 fn test_inheriting_non_class() {
     check_error_default(
-        "var NotClass = \"So not a class\";\n\
-         class OhNo < NotClass {}\n",
+        r#"
+var NotClass = "So not a class";
+class OhNo < NotClass {}
+"#,
         &|err: &str| assert!(err.starts_with("Superclass must be a class, found String at lineno=")),
     )
 }
@@ -783,25 +886,27 @@ fn test_inheriting_non_class() {
 #[test]
 fn test_super_1() {
     check_output_default(
-        "class A {\n\
-           method() {\n\
-             print \"A method\";\n\
-           }\n\
-         }\n\
-         \n\
-         class B < A {\n\
-           method() {\n\
-             print \"B method\";\n\
-           }\n\
-           \n\
-           test() {\n\
-             super.method();\n\
-           }\n\
-         }\n\
-         \n\
-         class C < B {}\n\
-         \n\
-         C().test();\n",
+        r#"
+class A {
+    method() {
+        print "A method";
+    }
+}
+
+class B < A {
+    method() {
+        print "B method";
+    }
+
+    test() {
+        super.method();
+    }
+}
+
+class C < B {}
+
+C().test();
+"#,
         &vec_of_strings!["A method"],
     )
 }
@@ -809,26 +914,28 @@ fn test_super_1() {
 #[test]
 fn test_super_2() {
     check_output_default(
-        "class A {\n\
-           method() {\n\
-             print \"A method\";\n\
-           }\n\
-         }\n\
-         \n\
-         class B < A {\n\
-           method() {\n\
-             print \"B method\";\n\
-           }\n\
-           \n\
-           test() {\n\
-             var func = super.method;\n\
-             func();\n\
-           }\n\
-         }\n\
-         \n\
-         class C < B {}\n\
-         \n\
-         C().test();\n",
+        r#"
+class A {
+    method() {
+        print "A method";
+    }
+}
+
+class B < A {
+    method() {
+        print "B method";
+    }
+
+    test() {
+        var func = super.method;
+        func();
+    }
+}
+
+class C < B {}
+
+C().test();
+"#,
         &vec_of_strings!["A method"],
     )
 }
@@ -836,26 +943,28 @@ fn test_super_2() {
 #[test]
 fn test_super_3() {
     check_output_default(
-        "class Doughnut {\n\
-           cook() {\n\
-             print \"Dunk in the fryer.\";\n\
-             this.finish(\"sprinkles\");\n\
-           }\n\
-           \n\
-           finish(ingredient) {\n\
-             print \"Finish with \" + ingredient;\n\
-           }\n\
-         }\n\
-         \n\
-         class Cruller < Doughnut {\n\
-           finish(ingredient) {\n\
-             // No sprinkles.\n\
-             super.finish(\"icing\");\n\
-           }\n\
-         }\n\
-         \n\
-         Doughnut().cook();\n\
-         Cruller().cook();\n",
+        r#"
+class Doughnut {
+    cook() {
+        print "Dunk in the fryer.";
+        this.finish("sprinkles");
+    }
+
+    finish(ingredient) {
+        print "Finish with " + ingredient;
+    }
+}
+
+class Cruller < Doughnut {
+    finish(ingredient) {
+        // No sprinkles.
+        super.finish("icing");
+    }
+}
+
+Doughnut().cook();
+Cruller().cook();
+"#,
         &vec_of_strings![
             "Dunk in the fryer.",
             "Finish with sprinkles",
@@ -868,10 +977,12 @@ fn test_super_3() {
 #[test]
 fn test_late_binding() {
     check_output_default(
-        "fun a() { b(); }\n\
-         fun b() { print \"hello world\"; }\n\
-         \n\
-         a();\n",
+        r#"
+fun a() { b(); }
+fun b() { print "hello world"; }
+
+a();
+"#,
         &vec_of_strings!["hello world"],
     )
 }
@@ -897,10 +1008,12 @@ fn test_list_concat() {
 #[test]
 fn test_len() {
     check_output_lists(
-        "print(len(\"\")); \n\
-         print(len(\"cat\")); \n\
-         print(len([])); \n\
-         print(len([1,2,3,4]));",
+        r#"
+print(len(""));
+print(len("cat"));
+print(len([]));
+print(len([1,2,3,4]));
+"#,
         &vec_of_strings!["0", "3", "0", "4"],
     )
 }
@@ -908,8 +1021,10 @@ fn test_len() {
 #[test]
 fn test_for_each() {
     check_output_lists(
-        "fun f(arg) { print arg; } \n\
-         forEach([1,2,3,4], f);",
+        r#"
+fun f(arg) { print arg; }
+forEach([1,2,3,4], f);
+"#,
         &vec_of_strings!["1", "2", "3", "4"],
     )
 }
@@ -917,8 +1032,10 @@ fn test_for_each() {
 #[test]
 fn test_map() {
     check_output_lists(
-        "fun f(arg) { return arg + 1; } \n\
-         print(map(f, [1,2,3,4]));",
+        r#"
+fun f(arg) { return arg + 1; }
+print(map(f, [1,2,3,4]));
+"#,
         &vec_of_strings!["[2, 3, 4, 5]"],
     )
 }
@@ -926,12 +1043,13 @@ fn test_map() {
 #[test]
 fn test_list_subscript() {
     check_output_lists(
-        "var xs = [0,1]; \n\
-         print(xs[0]); \n\
-         print(xs[1]); \n\
-         print(xs[-1]); \n\
-         print(xs[-2]); \n\
-         ",
+        r#"
+var xs = [0,1];
+print(xs[0]);
+print(xs[1]);
+print(xs[-1]);
+print(xs[-2]);
+"#,
         &vec_of_strings!["0", "1", "1", "0"],
     )
 }
@@ -939,9 +1057,11 @@ fn test_list_subscript() {
 #[test]
 fn test_list_setitem_1() {
     check_output_lists(
-        "var xs = [0,1]; \n\
-         xs[-1] = 42; \n\
-         print(xs);",
+        r#"
+var xs = [0,1];
+xs[-1] = 42;
+print(xs);
+"#,
         &vec_of_strings!["[0, 42]"],
     )
 }
@@ -949,9 +1069,11 @@ fn test_list_setitem_1() {
 #[test]
 fn test_list_setitem_2() {
     check_output_lists(
-        "var xs = [[0,1]]; \n\
-         xs[0][1] = 42; \n\
-         print(xs);",
+        r#"
+var xs = [[0,1]];
+xs[0][1] = 42;
+print(xs);
+"#,
         &vec_of_strings!["[[0, 42]]"],
     )
 }
@@ -959,11 +1081,13 @@ fn test_list_setitem_2() {
 #[test]
 fn test_list_setitem_3() {
     check_output_lists(
-        "class Foo {}\n\
-         var foo = Foo();\n\
-         foo.attr = [0];\n\
-         foo.attr[0] = 1337;\n\
-         print foo.attr;",
+        r#"
+class Foo {}
+var foo = Foo();
+foo.attr = [0];
+foo.attr[0] = 1337;
+print foo.attr;
+"#,
         &vec_of_strings!["[1337]"],
     )
 }

@@ -251,7 +251,7 @@ impl Parser {
             .clone();
 
         let class_symbol = expr::Symbol {
-            name: String::from_utf8(name_tok.lexeme).unwrap(),
+            name: name_tok.lexeme,
             line: name_tok.line,
             col: name_tok.col,
         };
@@ -260,7 +260,7 @@ impl Parser {
             let superclass_tok =
                 self.consume(token::TokenType::Identifier, "Expected class name.")?;
             Some(expr::Symbol {
-                name: String::from_utf8(superclass_tok.lexeme.clone()).unwrap(),
+                name: superclass_tok.lexeme.clone(),
                 line: superclass_tok.line,
                 col: superclass_tok.col,
             })
@@ -300,7 +300,7 @@ impl Parser {
             .clone();
 
         let fun_symbol = expr::Symbol {
-            name: String::from_utf8(name_tok.lexeme).unwrap(),
+            name: name_tok.lexeme,
             line: name_tok.line,
             col: name_tok.col,
         };
@@ -341,7 +341,7 @@ impl Parser {
                     .clone();
 
                 parameters.push(expr::Symbol {
-                    name: String::from_utf8(tok.lexeme).unwrap(),
+                    name: tok.lexeme,
                     line: tok.line,
                     col: tok.col,
                 });
@@ -387,7 +387,7 @@ impl Parser {
 
         Ok(expr::Stmt::VarDecl(
             expr::Symbol {
-                name: String::from_utf8(name_token.lexeme).unwrap(),
+                name: name_token.lexeme,
                 line: name_token.line,
                 col: name_token.col,
             },
@@ -714,7 +714,7 @@ impl Parser {
                 expr = expr::Expr::Get(
                     Box::new(expr),
                     expr::Symbol {
-                        name: String::from_utf8(name_tok.lexeme).unwrap(),
+                        name: name_tok.lexeme,
                         line: name_tok.line,
                         col: name_tok.col,
                     },
@@ -797,7 +797,7 @@ impl Parser {
                     col: super_tok.col,
                 },
                 expr::Symbol {
-                    name: String::from_utf8(method_tok.lexeme.clone()).unwrap(),
+                    name: method_tok.lexeme.clone(),
                     line: method_tok.line,
                     col: method_tok.col,
                 },

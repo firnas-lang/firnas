@@ -182,7 +182,7 @@ impl Compiler {
     fn class_decl(&mut self) -> Result<(), Error> {
         self.consume(token::TokenType::Identifier, "Expected class name.")?;
         let class_name_tok = self.previous().clone();
-        let class_name = String::from_utf8(class_name_tok.clone().lexeme).unwrap();
+        let class_name = class_name_tok.clone().lexeme;
         let name_constant = self.identifier_constant(class_name.clone());
         let line = self.previous().line;
         self.emit_op(firnas_bytecode::Op::Class(name_constant), line);
@@ -418,7 +418,7 @@ impl Compiler {
             return Err(Error::Semantic(ErrorInfo {
                 what: format!(
                     "Redeclaration of variable {} in the same scope.",
-                    String::from_utf8(name.lexeme).unwrap()
+                    name.lexeme
                 ),
                 line: self.previous().line,
                 col: self.previous().col,
@@ -458,7 +458,7 @@ impl Compiler {
     fn synthetic_token(text: &str) -> token::Token {
         token::Token {
             ty: token::TokenType::Identifier,
-            lexeme: text.as_bytes().to_vec(),
+            lexeme: text.to_string(),
             literal: Some(token::Literal::Identifier(String::from(text))),
             line: 0,
             col: -1,
@@ -1099,7 +1099,7 @@ impl Compiler {
             token::TokenType::Identifier,
             "Expected property name after '.'.",
         )?;
-        let property_name = String::from_utf8(self.previous().clone().lexeme).unwrap();
+        let property_name = self.previous().clone().lexeme;
         let property_constant = self.identifier_constant(property_name.clone());
         let op = if can_assign && self.matches(token::TokenType::Equal) {
             self.expression()?;

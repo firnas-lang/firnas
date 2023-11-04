@@ -1,10 +1,11 @@
 use firnas_bytecode;
 use firnas_ext;
-use firnas_tokenizer::scanner;
+use firnas_tokenizer::token;
+use firnas_tokenizer::tokenizer;
 
 #[derive(Debug)]
 struct Local {
-    name: scanner::Token,
+    name: token::Token,
     depth: i64,
     is_captured: bool,
 }
@@ -22,7 +23,7 @@ enum FunctionType {
 }
 
 pub struct Compiler {
-    tokens: Vec<scanner::Token>,
+    tokens: Vec<token::Token>,
     token_idx: usize,
     levels: Vec<Level>,
     level_idx: usize,
@@ -57,10 +58,10 @@ impl Default for Level {
             function: Default::default(),
             function_type: FunctionType::Script,
             locals: vec![Local {
-                name: scanner::Token {
-                    ty: scanner::TokenType::Identifier,
+                name: token::Token {
+                    ty: token::TokenType::Identifier,
                     lexeme: Default::default(),
-                    literal: Some(scanner::Literal::Identifier("".to_string())),
+                    literal: Some(token::Literal::Identifier("".to_string())),
                     line: 0,
                     col: -1,
                 },
@@ -128,7 +129,7 @@ pub struct ErrorInfo {
 
 #[derive(Debug)]
 pub enum Error {
-    Lexical(scanner::Error),
+    Lexical(firnas_tokenizer::error::Error),
     Parse(ErrorInfo),
     Semantic(ErrorInfo),
     Internal(String),
@@ -150,7 +151,7 @@ impl Compiler {
             ));
         }
 
-        match scanner::scan_tokens(input) {
+        match tokenizer::scan_tokens(input) {
             Ok(tokens) => {
                 compiler.tokens = tokens;
 
@@ -167,11 +168,11 @@ impl Compiler {
     }
 
     fn declaration(&mut self) -> Result<(), Error> {
-        if self.matches(scanner::TokenType::Class) {
+        if self.matches(token::TokenType::Class) {
             self.class_decl()
-        } else if self.matches(scanner::TokenType::Fun) {
+        } else if self.matches(token::TokenType::Fun) {
             self.fun_decl()
-        } else if self.matches(scanner::TokenType::Var) {
+        } else if self.matches(token::TokenType::Var) {
             self.var_decl()
         } else {
             self.statement()
@@ -179,7 +180,7 @@ impl Compiler {
     }
 
     fn class_decl(&mut self) -> Result<(), Error> {
-        self.consume(scanner::TokenType::Identifier, "Expected class name.")?;
+        self.consume(token::TokenType::Identifier, "Expected class name.")?;
         let class_name_tok = self.previous().clone();
         let class_name = String::from_utf8(class_name_tok.clone().lexeme).unwrap();
         let name_constant = self.identifier_constant(class_name.clone());
@@ -194,8 +195,8 @@ impl Compiler {
             has_superclass: false,
         });
 
-        if self.matches(scanner::TokenType::Less) {
-            self.consume(scanner::TokenType::Identifier, "Expected superclass name.")?;
+        if self.matches(token::TokenType::Less) {
+            self.consume(token::TokenType::Identifier, "Expected superclass name.")?;
             self.variable(false)?;
 
             if Compiler::identifiers_equal(&class_name_tok.literal, &self.previous().literal) {
@@ -226,18 +227,18 @@ impl Compiler {
         self.named_variable(class_name_tok, false)?;
 
         self.consume(
-            scanner::TokenType::LeftBrace,
+            token::TokenType::LeftBrace,
             "Expected '{' before class body.",
         )?;
         loop {
-            if self.check(scanner::TokenType::RightBrace) || self.check(scanner::TokenType::Eof) {
+            if self.check(token::TokenType::RightBrace) || self.check(token::TokenType::Eof) {
                 break;
             }
 
             self.method()?;
         }
         self.consume(
-            scanner::TokenType::RightBrace,
+            token::TokenType::RightBrace,
             "Expected '}' after class body.",
         )?;
         self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
@@ -254,8 +255,8 @@ impl Compiler {
     }
 
     fn method(&mut self) -> Result<(), Error> {
-        self.consume(scanner::TokenType::Identifier, "Expected method name.")?;
-        let method_name = if let Some(scanner::Literal::Identifier(method_name)) =
+        self.consume(token::TokenType::Identifier, "Expected method name.")?;
+        let method_name = if let Some(token::Literal::Identifier(method_name)) =
             &self.previous().literal.clone()
         {
             method_name.clone()
@@ -293,8 +294,7 @@ impl Compiler {
         let level = Level {
             function_type,
             function: firnas_bytecode::Function {
-                name: if let Some(scanner::Literal::Identifier(funname)) = &self.previous().literal
-                {
+                name: if let Some(token::Literal::Identifier(funname)) = &self.previous().literal {
                     funname.clone()
                 } else {
                     panic!("expected identifier");
@@ -307,34 +307,34 @@ impl Compiler {
 
         if function_type != FunctionType::Function {
             let local = self.current_level_mut().locals.first_mut().unwrap();
-            local.name.literal = Some(scanner::Literal::Identifier("this".to_string()));
+            local.name.literal = Some(token::Literal::Identifier("this".to_string()));
         }
 
         self.begin_scope();
         self.consume(
-            scanner::TokenType::LeftParen,
+            token::TokenType::LeftParen,
             "Expected '(' after function name.",
         )?;
 
-        if !self.check(scanner::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightParen) {
             loop {
                 self.current_function_mut().arity += 1;
                 let param_const_idx = self.parse_variable("Expected parameter name")?;
                 self.define_variable(param_const_idx);
 
-                if !self.matches(scanner::TokenType::Comma) {
+                if !self.matches(token::TokenType::Comma) {
                     break;
                 }
             }
         }
 
         self.consume(
-            scanner::TokenType::RightParen,
+            token::TokenType::RightParen,
             "Expected ')' after parameter list.",
         )?;
 
         self.consume(
-            scanner::TokenType::LeftBrace,
+            token::TokenType::LeftBrace,
             "Expected '{' before function body.",
         )?;
         self.block()?;
@@ -362,7 +362,7 @@ impl Compiler {
     fn var_decl(&mut self) -> Result<(), Error> {
         let global_idx = self.parse_variable("Expected variable name.")?;
 
-        if self.matches(scanner::TokenType::Equal) {
+        if self.matches(token::TokenType::Equal) {
             self.expression()?;
         } else {
             let line = self.previous().line;
@@ -370,7 +370,7 @@ impl Compiler {
         }
 
         self.consume(
-            scanner::TokenType::Semicolon,
+            token::TokenType::Semicolon,
             "Expected ';' after variable declaration",
         )?;
 
@@ -428,12 +428,11 @@ impl Compiler {
         Ok(())
     }
 
-    fn identifiers_equal(id1: &Option<scanner::Literal>, id2: &Option<scanner::Literal>) -> bool {
+    fn identifiers_equal(id1: &Option<token::Literal>, id2: &Option<token::Literal>) -> bool {
         match (id1, id2) {
-            (
-                Some(scanner::Literal::Identifier(name1)),
-                Some(scanner::Literal::Identifier(name2)),
-            ) => name1 == name2,
+            (Some(token::Literal::Identifier(name1)), Some(token::Literal::Identifier(name2))) => {
+                name1 == name2
+            }
             _ => {
                 panic!(
                     "expected identifier in `identifiers_equal` but found {:?} and {:?}.",
@@ -443,9 +442,9 @@ impl Compiler {
         }
     }
 
-    fn identifier_equal(id1: &Option<scanner::Literal>, name2: &str) -> bool {
+    fn identifier_equal(id1: &Option<token::Literal>, name2: &str) -> bool {
         match id1 {
-            Some(scanner::Literal::Identifier(name1)) => name1 == name2,
+            Some(token::Literal::Identifier(name1)) => name1 == name2,
             _ => {
                 panic!(
                     "expected identifier in `identifier_equal` but found {:?}.",
@@ -455,17 +454,17 @@ impl Compiler {
         }
     }
 
-    fn synthetic_token(text: &str) -> scanner::Token {
-        scanner::Token {
-            ty: scanner::TokenType::Identifier,
+    fn synthetic_token(text: &str) -> token::Token {
+        token::Token {
+            ty: token::TokenType::Identifier,
             lexeme: text.as_bytes().to_vec(),
-            literal: Some(scanner::Literal::Identifier(String::from(text))),
+            literal: Some(token::Literal::Identifier(String::from(text))),
             line: 0,
             col: -1,
         }
     }
 
-    fn add_local(&mut self, name: scanner::Token) {
+    fn add_local(&mut self, name: token::Token) {
         self.locals_mut().push(Local {
             name,
             depth: -1, // declare undefined
@@ -474,14 +473,14 @@ impl Compiler {
     }
 
     fn parse_variable(&mut self, error_msg: &str) -> Result<usize, Error> {
-        self.consume(scanner::TokenType::Identifier, error_msg)?;
+        self.consume(token::TokenType::Identifier, error_msg)?;
         self.declare_variable()?;
 
         if self.scope_depth() > 0 {
             return Ok(0);
         }
 
-        if let Some(scanner::Literal::Identifier(name)) = &self.previous().literal.clone() {
+        if let Some(token::Literal::Identifier(name)) = &self.previous().literal.clone() {
             Ok(self.identifier_constant(name.clone()))
         } else {
             panic!(
@@ -496,17 +495,17 @@ impl Compiler {
     }
 
     fn statement(&mut self) -> Result<(), Error> {
-        if self.matches(scanner::TokenType::Print) {
+        if self.matches(token::TokenType::Print) {
             self.print_statement()?;
-        } else if self.matches(scanner::TokenType::For) {
+        } else if self.matches(token::TokenType::For) {
             self.for_statement()?;
-        } else if self.matches(scanner::TokenType::If) {
+        } else if self.matches(token::TokenType::If) {
             self.if_statement()?;
-        } else if self.matches(scanner::TokenType::Return) {
+        } else if self.matches(token::TokenType::Return) {
             self.return_statement()?;
-        } else if self.matches(scanner::TokenType::While) {
+        } else if self.matches(token::TokenType::While) {
             self.while_statement()?;
-        } else if self.matches(scanner::TokenType::LeftBrace) {
+        } else if self.matches(token::TokenType::LeftBrace) {
             self.begin_scope();
             self.block()?;
             self.end_scope();
@@ -525,12 +524,12 @@ impl Compiler {
             }));
         }
 
-        if self.matches(scanner::TokenType::Semicolon) {
+        if self.matches(token::TokenType::Semicolon) {
             self.emit_return();
         } else {
             self.expression()?;
             self.consume(
-                scanner::TokenType::Semicolon,
+                token::TokenType::Semicolon,
                 "Expected ';' after return value.",
             )?;
             self.emit_op(firnas_bytecode::Op::Return, self.previous().line);
@@ -540,9 +539,9 @@ impl Compiler {
 
     fn for_statement(&mut self) -> Result<(), Error> {
         self.begin_scope();
-        self.consume(scanner::TokenType::LeftParen, "Expected '(' after 'for'.")?;
-        if self.matches(scanner::TokenType::Semicolon) {
-        } else if self.matches(scanner::TokenType::Var) {
+        self.consume(token::TokenType::LeftParen, "Expected '(' after 'for'.")?;
+        if self.matches(token::TokenType::Semicolon) {
+        } else if self.matches(token::TokenType::Var) {
             self.var_decl()?;
         } else {
             self.expression_statement()?;
@@ -552,10 +551,10 @@ impl Compiler {
 
         // condition
         let mut maybe_exit_jump = None;
-        if !self.matches(scanner::TokenType::Semicolon) {
+        if !self.matches(token::TokenType::Semicolon) {
             self.expression()?;
             self.consume(
-                scanner::TokenType::Semicolon,
+                token::TokenType::Semicolon,
                 "Expected ';' after loop condition",
             )?;
             maybe_exit_jump =
@@ -565,14 +564,14 @@ impl Compiler {
         let maybe_exit_jump = maybe_exit_jump;
 
         // increment
-        if !self.matches(scanner::TokenType::RightParen) {
+        if !self.matches(token::TokenType::RightParen) {
             let body_jump = self.emit_jump(firnas_bytecode::Op::Jump(/*placeholder*/ 0));
 
             let increment_start = self.current_chunk().code.len() + 1;
             self.expression()?;
             self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
             self.consume(
-                scanner::TokenType::RightParen,
+                token::TokenType::RightParen,
                 "Expected ')' after for clauses.",
             )?;
 
@@ -597,10 +596,10 @@ impl Compiler {
 
     fn while_statement(&mut self) -> Result<(), Error> {
         let loop_start = self.current_chunk().code.len();
-        self.consume(scanner::TokenType::LeftParen, "Expected '(' after 'while'.")?;
+        self.consume(token::TokenType::LeftParen, "Expected '(' after 'while'.")?;
         self.expression()?;
         self.consume(
-            scanner::TokenType::RightParen,
+            token::TokenType::RightParen,
             "Expected ')' after condition.",
         )?;
 
@@ -622,10 +621,10 @@ impl Compiler {
     }
 
     fn if_statement(&mut self) -> Result<(), Error> {
-        self.consume(scanner::TokenType::LeftParen, "Expected '(' after 'if'.")?;
+        self.consume(token::TokenType::LeftParen, "Expected '(' after 'if'.")?;
         self.expression()?;
         self.consume(
-            scanner::TokenType::RightParen,
+            token::TokenType::RightParen,
             "Expected ')' after condition.",
         )?;
 
@@ -639,7 +638,7 @@ impl Compiler {
         self.patch_jump(then_jump);
         self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
 
-        if self.matches(scanner::TokenType::Else) {
+        if self.matches(token::TokenType::Else) {
             self.statement()?;
         }
         self.patch_jump(else_jump);
@@ -670,11 +669,11 @@ impl Compiler {
     }
 
     fn block(&mut self) -> Result<(), Error> {
-        while !self.check(scanner::TokenType::RightBrace) && !self.check(scanner::TokenType::Eof) {
+        while !self.check(token::TokenType::RightBrace) && !self.check(token::TokenType::Eof) {
             self.declaration()?;
         }
 
-        self.consume(scanner::TokenType::RightBrace, "Expected '}' after block")?;
+        self.consume(token::TokenType::RightBrace, "Expected '}' after block")?;
 
         Ok(())
     }
@@ -712,7 +711,7 @@ impl Compiler {
     fn expression_statement(&mut self) -> Result<(), Error> {
         self.expression()?;
         self.consume(
-            scanner::TokenType::Semicolon,
+            token::TokenType::Semicolon,
             "Expected ';' after expression.",
         )?;
         let line = self.previous().line;
@@ -722,12 +721,12 @@ impl Compiler {
 
     fn print_statement(&mut self) -> Result<(), Error> {
         self.expression()?;
-        self.consume(scanner::TokenType::Semicolon, "Expected ';' after value.")?;
+        self.consume(token::TokenType::Semicolon, "Expected ';' after value.")?;
         self.emit_op(firnas_bytecode::Op::Print, self.previous().clone().line);
         Ok(())
     }
 
-    fn matches(&mut self, ty: scanner::TokenType) -> bool {
+    fn matches(&mut self, ty: token::TokenType) -> bool {
         if self.check(ty) {
             self.advance();
             return true;
@@ -735,7 +734,7 @@ impl Compiler {
         false
     }
 
-    fn check(&self, ty: scanner::TokenType) -> bool {
+    fn check(&self, ty: token::TokenType) -> bool {
         if self.is_at_end() {
             return false;
         }
@@ -751,7 +750,7 @@ impl Compiler {
         self.expression()?;
 
         self.consume(
-            scanner::TokenType::RightParen,
+            token::TokenType::RightParen,
             "Expected ')' after expression.",
         )?;
         Ok(())
@@ -761,7 +760,7 @@ impl Compiler {
         let tok = self.previous().clone();
 
         match tok.literal {
-            Some(scanner::Literal::Number(n)) => {
+            Some(token::Literal::Number(n)) => {
                 self.emit_number(n, tok.line);
                 Ok(())
             }
@@ -776,15 +775,15 @@ impl Compiler {
         let tok = self.previous().clone();
 
         match tok.ty {
-            scanner::TokenType::Nil => {
+            token::TokenType::Nil => {
                 self.emit_op(firnas_bytecode::Op::Nil, tok.line);
                 Ok(())
             }
-            scanner::TokenType::True => {
+            token::TokenType::True => {
                 self.emit_op(firnas_bytecode::Op::True, tok.line);
                 Ok(())
             }
-            scanner::TokenType::False => {
+            token::TokenType::False => {
                 self.emit_op(firnas_bytecode::Op::False, tok.line);
                 Ok(())
             }
@@ -799,16 +798,16 @@ impl Compiler {
         self.named_variable(tok, can_assign)
     }
 
-    fn named_variable(&mut self, tok: scanner::Token, can_assign: bool) -> Result<(), Error> {
+    fn named_variable(&mut self, tok: token::Token, can_assign: bool) -> Result<(), Error> {
         let name = match tok.ty {
-            scanner::TokenType::Identifier => {
-                if let Some(scanner::Literal::Identifier(n)) = tok.literal.clone() {
+            token::TokenType::Identifier => {
+                if let Some(token::Literal::Identifier(n)) = tok.literal.clone() {
                     Some(n)
                 } else {
                     None
                 }
             }
-            scanner::TokenType::This => Some("this".to_string()),
+            token::TokenType::This => Some("this".to_string()),
             _ => None,
         }
         .unwrap();
@@ -835,7 +834,7 @@ impl Compiler {
             }
         }
 
-        if can_assign && self.matches(scanner::TokenType::Equal) {
+        if can_assign && self.matches(token::TokenType::Equal) {
             self.expression()?;
             self.emit_op(set_op, tok.line);
         } else {
@@ -906,7 +905,7 @@ impl Compiler {
     fn resolve_local_static(
         level: &Level,
         name: &str,
-        prev_tok: &scanner::Token,
+        prev_tok: &token::Token,
     ) -> Result<Option<usize>, Error> {
         for (idx, local) in level.locals.iter().rev().enumerate() {
             if Compiler::identifier_equal(&local.name.literal, name) {
@@ -926,7 +925,7 @@ impl Compiler {
         let tok = self.previous().clone();
 
         match tok.literal {
-            Some(scanner::Literal::Str(s)) => {
+            Some(token::Literal::Str(s)) => {
                 let const_idx = self.current_chunk().add_constant_string(s);
                 self.emit_op(firnas_bytecode::Op::Constant(const_idx), tok.line);
                 Ok(())
@@ -943,45 +942,45 @@ impl Compiler {
         self.parse_precedence(Compiler::next_precedence(rule.precedence))?;
 
         match operator.ty {
-            scanner::TokenType::Plus => {
+            token::TokenType::Plus => {
                 self.emit_op(firnas_bytecode::Op::Add, operator.line);
                 Ok(())
             }
-            scanner::TokenType::Minus => {
+            token::TokenType::Minus => {
                 self.emit_op(firnas_bytecode::Op::Subtract, operator.line);
                 Ok(())
             }
-            scanner::TokenType::Star => {
+            token::TokenType::Star => {
                 self.emit_op(firnas_bytecode::Op::Multiply, operator.line);
                 Ok(())
             }
-            scanner::TokenType::Slash => {
+            token::TokenType::Slash => {
                 self.emit_op(firnas_bytecode::Op::Divide, operator.line);
                 Ok(())
             }
-            scanner::TokenType::BangEqual => {
+            token::TokenType::BangEqual => {
                 self.emit_op(firnas_bytecode::Op::Equal, operator.line);
                 self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
             }
-            scanner::TokenType::EqualEqual => {
+            token::TokenType::EqualEqual => {
                 self.emit_op(firnas_bytecode::Op::Equal, operator.line);
                 Ok(())
             }
-            scanner::TokenType::Greater => {
+            token::TokenType::Greater => {
                 self.emit_op(firnas_bytecode::Op::Greater, operator.line);
                 Ok(())
             }
-            scanner::TokenType::GreaterEqual => {
+            token::TokenType::GreaterEqual => {
                 self.emit_op(firnas_bytecode::Op::Less, operator.line);
                 self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
             }
-            scanner::TokenType::Less => {
+            token::TokenType::Less => {
                 self.emit_op(firnas_bytecode::Op::Less, operator.line);
                 Ok(())
             }
-            scanner::TokenType::LessEqual => {
+            token::TokenType::LessEqual => {
                 self.emit_op(firnas_bytecode::Op::Greater, operator.line);
                 self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
@@ -1040,16 +1039,13 @@ impl Compiler {
                 }
             }
         }
+        self.consume(token::TokenType::Dot, "Expected '.' after 'super' keyword.")?;
         self.consume(
-            scanner::TokenType::Dot,
-            "Expected '.' after 'super' keyword.",
-        )?;
-        self.consume(
-            scanner::TokenType::Identifier,
+            token::TokenType::Identifier,
             "Expected superclass method name.",
         )?;
 
-        let method_name = if let Some(scanner::Literal::Identifier(method_name)) =
+        let method_name = if let Some(token::Literal::Identifier(method_name)) =
             &self.previous().literal.clone()
         {
             method_name.clone()
@@ -1059,7 +1055,7 @@ impl Compiler {
 
         self.named_variable(Compiler::synthetic_token("this"), false)?;
 
-        let op = if self.matches(scanner::TokenType::LeftParen) {
+        let op = if self.matches(token::TokenType::LeftParen) {
             let arg_count = self.argument_list()?;
             self.named_variable(Compiler::synthetic_token("super"), false)?;
             firnas_bytecode::Op::SuperInvoke(method_name, arg_count)
@@ -1086,15 +1082,15 @@ impl Compiler {
 
     fn dot(&mut self, can_assign: bool) -> Result<(), Error> {
         self.consume(
-            scanner::TokenType::Identifier,
+            token::TokenType::Identifier,
             "Expected property name after '.'.",
         )?;
         let property_name = String::from_utf8(self.previous().clone().lexeme).unwrap();
         let property_constant = self.identifier_constant(property_name.clone());
-        let op = if can_assign && self.matches(scanner::TokenType::Equal) {
+        let op = if can_assign && self.matches(token::TokenType::Equal) {
             self.expression()?;
             firnas_bytecode::Op::SetProperty(property_constant)
-        } else if self.matches(scanner::TokenType::LeftParen) {
+        } else if self.matches(token::TokenType::LeftParen) {
             let arg_count = self.argument_list()?;
             firnas_bytecode::Op::Invoke(property_name, arg_count)
         } else {
@@ -1114,10 +1110,7 @@ impl Compiler {
         }
 
         self.expression()?;
-        self.consume(
-            scanner::TokenType::RightBracket,
-            "Expected ] after subscript",
-        )?;
+        self.consume(token::TokenType::RightBracket, "Expected ] after subscript")?;
         self.emit_op(firnas_bytecode::Op::Subscr, self.previous().line);
         Ok(())
     }
@@ -1141,32 +1134,32 @@ impl Compiler {
 
     fn list_elements(&mut self) -> Result<usize, Error> {
         let mut num_elements: usize = 0;
-        if !self.check(scanner::TokenType::RightBracket) {
+        if !self.check(token::TokenType::RightBracket) {
             loop {
                 self.expression()?;
                 num_elements += 1;
-                if !self.matches(scanner::TokenType::Comma) {
+                if !self.matches(token::TokenType::Comma) {
                     break;
                 }
             }
         }
-        self.consume(scanner::TokenType::RightBracket, "Expected ']'.")?;
+        self.consume(token::TokenType::RightBracket, "Expected ']'.")?;
         Ok(num_elements)
     }
 
     fn argument_list(&mut self) -> Result<u8, Error> {
         let mut arg_count: u8 = 0;
-        if !self.check(scanner::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightParen) {
             loop {
                 self.expression()?;
                 arg_count += 1;
-                if !self.matches(scanner::TokenType::Comma) {
+                if !self.matches(token::TokenType::Comma) {
                     break;
                 }
             }
         }
         self.consume(
-            scanner::TokenType::RightParen,
+            token::TokenType::RightParen,
             "Expected ')' after argument list.",
         )?;
         Ok(arg_count)
@@ -1178,11 +1171,11 @@ impl Compiler {
         self.parse_precedence(Precedence::Unary)?;
 
         match operator.ty {
-            scanner::TokenType::Minus => {
+            token::TokenType::Minus => {
                 self.emit_op(firnas_bytecode::Op::Negate, operator.line);
                 Ok(())
             }
-            scanner::TokenType::Bang => {
+            token::TokenType::Bang => {
                 self.emit_op(firnas_bytecode::Op::Not, operator.line);
                 Ok(())
             }
@@ -1235,7 +1228,7 @@ impl Compiler {
             }
         }
 
-        if can_assign && self.matches(scanner::TokenType::Equal) {
+        if can_assign && self.matches(token::TokenType::Equal) {
             if let Some((firnas_bytecode::Op::Subscr, _)) = self.current_chunk().code.last() {
                 self.fixup_subscript_to_setitem()?;
             } else {
@@ -1257,7 +1250,7 @@ impl Compiler {
         Compiler::error_at_tok(what, self.previous())
     }
 
-    fn error_at_tok(what: &str, prev_tok: &scanner::Token) -> Error {
+    fn error_at_tok(what: &str, prev_tok: &token::Token) -> Error {
         Error::Semantic(ErrorInfo {
             what: what.to_string(),
             line: prev_tok.line,
@@ -1285,11 +1278,7 @@ impl Compiler {
         }
     }
 
-    fn consume(
-        &mut self,
-        tok: scanner::TokenType,
-        on_err_str: &str,
-    ) -> Result<&scanner::Token, Error> {
+    fn consume(&mut self, tok: token::TokenType, on_err_str: &str) -> Result<&token::Token, Error> {
         if self.check(tok) {
             return Ok(self.advance());
         }
@@ -1305,7 +1294,7 @@ impl Compiler {
         }))
     }
 
-    fn advance(&mut self) -> &scanner::Token {
+    fn advance(&mut self) -> &token::Token {
         if !self.is_at_end() {
             self.token_idx += 1
         }
@@ -1313,15 +1302,15 @@ impl Compiler {
         self.previous()
     }
 
-    fn previous(&self) -> &scanner::Token {
+    fn previous(&self) -> &token::Token {
         &self.tokens[self.token_idx - 1]
     }
 
     fn is_at_end(&self) -> bool {
-        self.peek().ty == scanner::TokenType::Eof
+        self.peek().ty == token::TokenType::Eof
     }
 
-    fn peek(&self) -> &scanner::Token {
+    fn peek(&self) -> &token::Token {
         &self.tokens[self.token_idx]
     }
 
@@ -1341,210 +1330,210 @@ impl Compiler {
         }
     }
 
-    fn get_rule(operator: scanner::TokenType) -> ParseRule {
+    fn get_rule(operator: token::TokenType) -> ParseRule {
         match operator {
-            scanner::TokenType::LeftParen => ParseRule {
+            token::TokenType::LeftParen => ParseRule {
                 prefix: Some(ParseFn::Grouping),
                 infix: Some(ParseFn::Call),
                 precedence: Precedence::Call,
             },
-            scanner::TokenType::RightParen => ParseRule {
+            token::TokenType::RightParen => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::LeftBrace => ParseRule {
+            token::TokenType::LeftBrace => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::RightBrace => ParseRule {
+            token::TokenType::RightBrace => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::LeftBracket => ParseRule {
+            token::TokenType::LeftBracket => ParseRule {
                 prefix: Some(ParseFn::List),
                 infix: Some(ParseFn::Subscript),
                 precedence: Precedence::Call,
             },
-            scanner::TokenType::RightBracket => ParseRule {
+            token::TokenType::RightBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Comma => ParseRule {
+            token::TokenType::Comma => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Dot => ParseRule {
+            token::TokenType::Dot => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Dot),
                 precedence: Precedence::Call,
             },
-            scanner::TokenType::Minus => ParseRule {
+            token::TokenType::Minus => ParseRule {
                 prefix: Some(ParseFn::Unary),
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Term,
             },
-            scanner::TokenType::Plus => ParseRule {
+            token::TokenType::Plus => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Term,
             },
-            scanner::TokenType::Semicolon => ParseRule {
+            token::TokenType::Semicolon => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Slash => ParseRule {
+            token::TokenType::Slash => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Factor,
             },
-            scanner::TokenType::Star => ParseRule {
+            token::TokenType::Star => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Factor,
             },
-            scanner::TokenType::Bang => ParseRule {
+            token::TokenType::Bang => ParseRule {
                 prefix: Some(ParseFn::Unary),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::BangEqual => ParseRule {
+            token::TokenType::BangEqual => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Equality,
             },
-            scanner::TokenType::Equal => ParseRule {
+            token::TokenType::Equal => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::EqualEqual => ParseRule {
+            token::TokenType::EqualEqual => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Equality,
             },
-            scanner::TokenType::Greater => ParseRule {
+            token::TokenType::Greater => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Comparison,
             },
-            scanner::TokenType::GreaterEqual => ParseRule {
+            token::TokenType::GreaterEqual => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Comparison,
             },
-            scanner::TokenType::Less => ParseRule {
+            token::TokenType::Less => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Comparison,
             },
-            scanner::TokenType::LessEqual => ParseRule {
+            token::TokenType::LessEqual => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Binary),
                 precedence: Precedence::Comparison,
             },
-            scanner::TokenType::Identifier => ParseRule {
+            token::TokenType::Identifier => ParseRule {
                 prefix: Some(ParseFn::Variable),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::String => ParseRule {
+            token::TokenType::String => ParseRule {
                 prefix: Some(ParseFn::String),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Number => ParseRule {
+            token::TokenType::Number => ParseRule {
                 prefix: Some(ParseFn::Number),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::And => ParseRule {
+            token::TokenType::And => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::And),
                 precedence: Precedence::And,
             },
-            scanner::TokenType::Class => ParseRule {
+            token::TokenType::Class => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Else => ParseRule {
+            token::TokenType::Else => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::False => ParseRule {
+            token::TokenType::False => ParseRule {
                 prefix: Some(ParseFn::Literal),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::For => ParseRule {
+            token::TokenType::For => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Fun => ParseRule {
+            token::TokenType::Fun => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::If => ParseRule {
+            token::TokenType::If => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Nil => ParseRule {
+            token::TokenType::Nil => ParseRule {
                 prefix: Some(ParseFn::Literal),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Or => ParseRule {
+            token::TokenType::Or => ParseRule {
                 prefix: None,
                 infix: Some(ParseFn::Or),
                 precedence: Precedence::Or,
             },
-            scanner::TokenType::Print => ParseRule {
+            token::TokenType::Print => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Return => ParseRule {
+            token::TokenType::Return => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Super => ParseRule {
+            token::TokenType::Super => ParseRule {
                 prefix: Some(ParseFn::Super),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::This => ParseRule {
+            token::TokenType::This => ParseRule {
                 prefix: Some(ParseFn::This),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::True => ParseRule {
+            token::TokenType::True => ParseRule {
                 prefix: Some(ParseFn::Literal),
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Var => ParseRule {
+            token::TokenType::Var => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::While => ParseRule {
+            token::TokenType::While => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            scanner::TokenType::Lambda => unimplemented!(),
-            scanner::TokenType::Eof => ParseRule {
+            token::TokenType::Lambda => unimplemented!(),
+            token::TokenType::Eof => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,

@@ -1265,11 +1265,11 @@ impl Interpreter {
 mod tests {
     use crate::interpreter;
     use crate::parser;
-    use firnas_ext as extensions;
-    use firnas_tokenizer::scanner;
+    use firnas_ext;
+    use firnas_tokenizer::tokenizer;
 
-    fn evaluate(code: &str, options: extensions::Extensions) -> Result<String, String> {
-        let tokens = scanner::scan_tokens(code.to_string()).unwrap();
+    fn evaluate(code: &str, options: firnas_ext::Extensions) -> Result<String, String> {
+        let tokens = tokenizer::scan_tokens(code.to_string()).unwrap();
 
         match parser::parse(options, tokens) {
             Ok(stmts) => {
@@ -1285,10 +1285,10 @@ mod tests {
     }
 
     fn evaluate_default(code: &str) -> Result<String, String> {
-        evaluate(code, extensions::Extensions::default())
+        evaluate(code, firnas_ext::Extensions::default())
     }
 
-    fn check_output(code: &str, expected_output: &str, options: extensions::Extensions) {
+    fn check_output(code: &str, expected_output: &str, options: firnas_ext::Extensions) {
         let res = evaluate(code, options);
 
         match res {
@@ -1301,7 +1301,7 @@ mod tests {
         check_output(
             code,
             expected_output,
-            extensions::Extensions {
+            firnas_ext::Extensions {
                 lists: true,
                 ..Default::default()
             },
@@ -1312,7 +1312,7 @@ mod tests {
         check_output(
             code,
             expected_output,
-            extensions::Extensions {
+            firnas_ext::Extensions {
                 lambdas: true,
                 ..Default::default()
             },
@@ -1323,7 +1323,7 @@ mod tests {
         check_output(
             code,
             expected_output,
-            extensions::Extensions {
+            firnas_ext::Extensions {
                 lambdas: true,
                 lists: true,
             },
@@ -1331,7 +1331,7 @@ mod tests {
     }
 
     fn check_output_default(code: &str, expected_output: &str) {
-        check_output(code, expected_output, extensions::Extensions::default())
+        check_output(code, expected_output, firnas_ext::Extensions::default())
     }
 
     fn check_error(code: &str, f: &dyn Fn(&str) -> ()) {

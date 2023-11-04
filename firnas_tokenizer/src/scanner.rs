@@ -94,12 +94,12 @@ impl Scanner {
         let c = self.advance();
 
         match c {
-            '(' => self.add_token(TokenType::LeftParen),
-            ')' => self.add_token(TokenType::RightParen),
-            '{' => self.add_token(TokenType::LeftBrace),
-            '}' => self.add_token(TokenType::RightBrace),
-            '[' => self.add_token(TokenType::LeftBracket),
-            ']' => self.add_token(TokenType::RightBracket),
+            '(' => self.add_token(TokenType::LeftRoundBracket),
+            ')' => self.add_token(TokenType::RightRoundBracket),
+            '{' => self.add_token(TokenType::LeftCurlyBracket),
+            '}' => self.add_token(TokenType::RightCurlyBracket),
+            '[' => self.add_token(TokenType::LeftSquareBracket),
+            ']' => self.add_token(TokenType::RightSquareBracket),
             ',' => self.add_token(TokenType::Comma),
             '.' => self.add_token(TokenType::Dot),
             '-' => self.add_token(TokenType::Minus),

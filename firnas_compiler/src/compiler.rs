@@ -227,18 +227,19 @@ impl Compiler {
         self.named_variable(class_name_tok, false)?;
 
         self.consume(
-            token::TokenType::LeftBrace,
+            token::TokenType::LeftCurlyBracket,
             "Expected '{' before class body.",
         )?;
         loop {
-            if self.check(token::TokenType::RightBrace) || self.check(token::TokenType::Eof) {
+            if self.check(token::TokenType::RightCurlyBracket) || self.check(token::TokenType::Eof)
+            {
                 break;
             }
 
             self.method()?;
         }
         self.consume(
-            token::TokenType::RightBrace,
+            token::TokenType::RightCurlyBracket,
             "Expected '}' after class body.",
         )?;
         self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
@@ -312,11 +313,11 @@ impl Compiler {
 
         self.begin_scope();
         self.consume(
-            token::TokenType::LeftParen,
+            token::TokenType::LeftRoundBracket,
             "Expected '(' after function name.",
         )?;
 
-        if !self.check(token::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightRoundBracket) {
             loop {
                 self.current_function_mut().arity += 1;
                 let param_const_idx = self.parse_variable("Expected parameter name")?;
@@ -329,12 +330,12 @@ impl Compiler {
         }
 
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after parameter list.",
         )?;
 
         self.consume(
-            token::TokenType::LeftBrace,
+            token::TokenType::LeftCurlyBracket,
             "Expected '{' before function body.",
         )?;
         self.block()?;
@@ -505,7 +506,7 @@ impl Compiler {
             self.return_statement()?;
         } else if self.matches(token::TokenType::While) {
             self.while_statement()?;
-        } else if self.matches(token::TokenType::LeftBrace) {
+        } else if self.matches(token::TokenType::LeftCurlyBracket) {
             self.begin_scope();
             self.block()?;
             self.end_scope();
@@ -539,7 +540,10 @@ impl Compiler {
 
     fn for_statement(&mut self) -> Result<(), Error> {
         self.begin_scope();
-        self.consume(token::TokenType::LeftParen, "Expected '(' after 'for'.")?;
+        self.consume(
+            token::TokenType::LeftRoundBracket,
+            "Expected '(' after 'for'.",
+        )?;
         if self.matches(token::TokenType::Semicolon) {
         } else if self.matches(token::TokenType::Var) {
             self.var_decl()?;
@@ -564,14 +568,14 @@ impl Compiler {
         let maybe_exit_jump = maybe_exit_jump;
 
         // increment
-        if !self.matches(token::TokenType::RightParen) {
+        if !self.matches(token::TokenType::RightRoundBracket) {
             let body_jump = self.emit_jump(firnas_bytecode::Op::Jump(/*placeholder*/ 0));
 
             let increment_start = self.current_chunk().code.len() + 1;
             self.expression()?;
             self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
             self.consume(
-                token::TokenType::RightParen,
+                token::TokenType::RightRoundBracket,
                 "Expected ')' after for clauses.",
             )?;
 
@@ -596,10 +600,13 @@ impl Compiler {
 
     fn while_statement(&mut self) -> Result<(), Error> {
         let loop_start = self.current_chunk().code.len();
-        self.consume(token::TokenType::LeftParen, "Expected '(' after 'while'.")?;
+        self.consume(
+            token::TokenType::LeftRoundBracket,
+            "Expected '(' after 'while'.",
+        )?;
         self.expression()?;
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after condition.",
         )?;
 
@@ -621,10 +628,13 @@ impl Compiler {
     }
 
     fn if_statement(&mut self) -> Result<(), Error> {
-        self.consume(token::TokenType::LeftParen, "Expected '(' after 'if'.")?;
+        self.consume(
+            token::TokenType::LeftRoundBracket,
+            "Expected '(' after 'if'.",
+        )?;
         self.expression()?;
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after condition.",
         )?;
 
@@ -669,11 +679,15 @@ impl Compiler {
     }
 
     fn block(&mut self) -> Result<(), Error> {
-        while !self.check(token::TokenType::RightBrace) && !self.check(token::TokenType::Eof) {
+        while !self.check(token::TokenType::RightCurlyBracket) && !self.check(token::TokenType::Eof)
+        {
             self.declaration()?;
         }
 
-        self.consume(token::TokenType::RightBrace, "Expected '}' after block")?;
+        self.consume(
+            token::TokenType::RightCurlyBracket,
+            "Expected '}' after block",
+        )?;
 
         Ok(())
     }
@@ -750,7 +764,7 @@ impl Compiler {
         self.expression()?;
 
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after expression.",
         )?;
         Ok(())
@@ -1055,7 +1069,7 @@ impl Compiler {
 
         self.named_variable(Compiler::synthetic_token("this"), false)?;
 
-        let op = if self.matches(token::TokenType::LeftParen) {
+        let op = if self.matches(token::TokenType::LeftRoundBracket) {
             let arg_count = self.argument_list()?;
             self.named_variable(Compiler::synthetic_token("super"), false)?;
             firnas_bytecode::Op::SuperInvoke(method_name, arg_count)
@@ -1090,7 +1104,7 @@ impl Compiler {
         let op = if can_assign && self.matches(token::TokenType::Equal) {
             self.expression()?;
             firnas_bytecode::Op::SetProperty(property_constant)
-        } else if self.matches(token::TokenType::LeftParen) {
+        } else if self.matches(token::TokenType::LeftRoundBracket) {
             let arg_count = self.argument_list()?;
             firnas_bytecode::Op::Invoke(property_name, arg_count)
         } else {
@@ -1110,7 +1124,10 @@ impl Compiler {
         }
 
         self.expression()?;
-        self.consume(token::TokenType::RightBracket, "Expected ] after subscript")?;
+        self.consume(
+            token::TokenType::RightSquareBracket,
+            "Expected ] after subscript",
+        )?;
         self.emit_op(firnas_bytecode::Op::Subscr, self.previous().line);
         Ok(())
     }
@@ -1134,7 +1151,7 @@ impl Compiler {
 
     fn list_elements(&mut self) -> Result<usize, Error> {
         let mut num_elements: usize = 0;
-        if !self.check(token::TokenType::RightBracket) {
+        if !self.check(token::TokenType::RightSquareBracket) {
             loop {
                 self.expression()?;
                 num_elements += 1;
@@ -1143,13 +1160,13 @@ impl Compiler {
                 }
             }
         }
-        self.consume(token::TokenType::RightBracket, "Expected ']'.")?;
+        self.consume(token::TokenType::RightSquareBracket, "Expected ']'.")?;
         Ok(num_elements)
     }
 
     fn argument_list(&mut self) -> Result<u8, Error> {
         let mut arg_count: u8 = 0;
-        if !self.check(token::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightRoundBracket) {
             loop {
                 self.expression()?;
                 arg_count += 1;
@@ -1159,7 +1176,7 @@ impl Compiler {
             }
         }
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after argument list.",
         )?;
         Ok(arg_count)
@@ -1332,32 +1349,32 @@ impl Compiler {
 
     fn get_rule(operator: token::TokenType) -> ParseRule {
         match operator {
-            token::TokenType::LeftParen => ParseRule {
+            token::TokenType::LeftRoundBracket => ParseRule {
                 prefix: Some(ParseFn::Grouping),
                 infix: Some(ParseFn::Call),
                 precedence: Precedence::Call,
             },
-            token::TokenType::RightParen => ParseRule {
+            token::TokenType::RightRoundBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            token::TokenType::LeftBrace => ParseRule {
+            token::TokenType::LeftCurlyBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            token::TokenType::RightBrace => ParseRule {
+            token::TokenType::RightCurlyBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            token::TokenType::LeftBracket => ParseRule {
+            token::TokenType::LeftSquareBracket => ParseRule {
                 prefix: Some(ParseFn::List),
                 infix: Some(ParseFn::Subscript),
                 precedence: Precedence::Call,
             },
-            token::TokenType::RightBracket => ParseRule {
+            token::TokenType::RightSquareBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,

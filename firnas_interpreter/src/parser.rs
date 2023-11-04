@@ -268,15 +268,21 @@ impl Parser {
             None
         };
 
-        self.consume(token::TokenType::LeftBrace, "Expected { after class name")?;
+        self.consume(
+            token::TokenType::LeftCurlyBracket,
+            "Expected { after class name",
+        )?;
 
         let mut methods = Vec::new();
-        while !self.check(token::TokenType::RightBrace) && !self.is_at_end() {
+        while !self.check(token::TokenType::RightCurlyBracket) && !self.is_at_end() {
             methods.push(self.fun_decl(FunctionKind::Method)?);
         }
         let methods = methods;
 
-        self.consume(token::TokenType::RightBrace, "Expected } after class body")?;
+        self.consume(
+            token::TokenType::RightCurlyBracket,
+            "Expected } after class body",
+        )?;
 
         Ok(expr::Stmt::ClassDecl(expr::ClassDecl {
             name: class_symbol,
@@ -313,13 +319,13 @@ impl Parser {
         kind: FunctionKind,
     ) -> Result<(Vec<expr::Symbol>, Vec<expr::Stmt>), Error> {
         self.consume(
-            token::TokenType::LeftParen,
+            token::TokenType::LeftRoundBracket,
             format!("Expected ( after {:?} name", kind).as_ref(),
         )?;
 
         let mut parameters = Vec::new();
 
-        if !self.check(token::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightRoundBracket) {
             loop {
                 if parameters.len() >= 255 {
                     let peek_tok = self.peek();
@@ -348,11 +354,11 @@ impl Parser {
         let parameters = parameters;
 
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ) after parameter list",
         )?;
         self.consume(
-            token::TokenType::LeftBrace,
+            token::TokenType::LeftCurlyBracket,
             "Expected { before function body",
         )?;
         let saved_is_in_fundec = self.in_fundec;
@@ -398,7 +404,7 @@ impl Parser {
             return self.while_statement();
         }
 
-        if self.matches(token::TokenType::LeftBrace) {
+        if self.matches(token::TokenType::LeftCurlyBracket) {
             return Ok(expr::Stmt::Block(self.block()?));
         }
 
@@ -447,7 +453,7 @@ impl Parser {
     }
 
     fn for_statement(&mut self) -> Result<expr::Stmt, Error> {
-        self.consume(token::TokenType::LeftParen, "Expected ( after for.")?;
+        self.consume(token::TokenType::LeftRoundBracket, "Expected ( after for.")?;
 
         let mut maybe_initializer: Option<expr::Stmt> = None;
         if self.matches(token::TokenType::Semicolon) {
@@ -469,13 +475,16 @@ impl Parser {
             "Expected ; after loop condition",
         )?;
 
-        let maybe_increment = if !self.check(token::TokenType::RightParen) {
+        let maybe_increment = if !self.check(token::TokenType::RightRoundBracket) {
             Some(self.expression()?)
         } else {
             None
         };
 
-        self.consume(token::TokenType::RightParen, "Expected ) after for clauses")?;
+        self.consume(
+            token::TokenType::RightRoundBracket,
+            "Expected ) after for clauses",
+        )?;
 
         let mut body = self.statement()?;
 
@@ -498,10 +507,10 @@ impl Parser {
     }
 
     fn while_statement(&mut self) -> Result<expr::Stmt, Error> {
-        self.consume(token::TokenType::LeftParen, "Expected ( after while")?;
+        self.consume(token::TokenType::LeftRoundBracket, "Expected ( after while")?;
         let cond = self.expression()?;
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ) after while condition",
         )?;
         let body = Box::new(self.statement()?);
@@ -509,10 +518,10 @@ impl Parser {
     }
 
     fn if_statement(&mut self) -> Result<expr::Stmt, Error> {
-        self.consume(token::TokenType::LeftParen, "Expected ( after if.")?;
+        self.consume(token::TokenType::LeftRoundBracket, "Expected ( after if.")?;
         let cond = self.expression()?;
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ) after if condition.",
         )?;
         let then_branch = Box::new(self.statement()?);
@@ -528,11 +537,14 @@ impl Parser {
     fn block(&mut self) -> Result<Vec<expr::Stmt>, Error> {
         let mut stmts = Vec::new();
 
-        while !self.check(token::TokenType::RightBrace) && !self.is_at_end() {
+        while !self.check(token::TokenType::RightCurlyBracket) && !self.is_at_end() {
             stmts.push(self.declaration()?)
         }
 
-        self.consume(token::TokenType::RightBrace, "Expected } after block.")?;
+        self.consume(
+            token::TokenType::RightCurlyBracket,
+            "Expected } after block.",
+        )?;
 
         Ok(stmts)
     }
@@ -690,7 +702,7 @@ impl Parser {
         let mut expr = self.primary()?;
 
         loop {
-            if self.matches(token::TokenType::LeftParen) {
+            if self.matches(token::TokenType::LeftRoundBracket) {
                 expr = self.finish_call(expr)?;
             } else if self.matches(token::TokenType::Dot) {
                 let name_tok = self
@@ -707,10 +719,12 @@ impl Parser {
                         col: name_tok.col,
                     },
                 );
-            } else if self.extensions.lists && self.matches(token::TokenType::LeftBracket) {
+            } else if self.extensions.lists && self.matches(token::TokenType::LeftSquareBracket) {
                 let slice_expr = self.expression()?;
-                let token =
-                    self.consume(token::TokenType::RightBracket, "Expected ] after subscript")?;
+                let token = self.consume(
+                    token::TokenType::RightSquareBracket,
+                    "Expected ] after subscript",
+                )?;
                 expr = expr::Expr::Subscript {
                     value: Box::new(expr),
                     slice: Box::new(slice_expr),
@@ -729,7 +743,7 @@ impl Parser {
     fn finish_call(&mut self, callee: expr::Expr) -> Result<expr::Expr, Error> {
         let mut arguments = Vec::new();
 
-        if !self.check(token::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightRoundBracket) {
             loop {
                 if arguments.len() >= 255 {
                     let peek_tok = self.peek();
@@ -745,7 +759,10 @@ impl Parser {
             }
         }
 
-        let token = self.consume(token::TokenType::RightParen, "Expected ) after arguments.")?;
+        let token = self.consume(
+            token::TokenType::RightRoundBracket,
+            "Expected ) after arguments.",
+        )?;
 
         Ok(expr::Expr::Call(
             Box::new(callee),
@@ -835,18 +852,18 @@ impl Parser {
                 }
             }
         }
-        if self.matches(token::TokenType::LeftParen) {
+        if self.matches(token::TokenType::LeftRoundBracket) {
             let expr = Box::new(self.expression()?);
             self.consume(
-                token::TokenType::RightParen,
+                token::TokenType::RightRoundBracket,
                 "Expected ')' after expression.",
             )?;
             return Ok(expr::Expr::Grouping(expr));
         }
-        if self.extensions.lists && self.matches(token::TokenType::LeftBracket) {
+        if self.extensions.lists && self.matches(token::TokenType::LeftSquareBracket) {
             let mut list_elements = Vec::new();
 
-            if !self.check(token::TokenType::RightBracket) {
+            if !self.check(token::TokenType::RightSquareBracket) {
                 loop {
                     list_elements.push(self.expression()?);
                     if !self.matches(token::TokenType::Comma) {
@@ -855,7 +872,7 @@ impl Parser {
                 }
             }
 
-            self.consume(token::TokenType::RightBracket, "Expected ].")?;
+            self.consume(token::TokenType::RightSquareBracket, "Expected ].")?;
 
             return Ok(expr::Expr::List(list_elements));
         }

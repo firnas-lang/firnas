@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     Identifier(String),
     Str(String),
@@ -14,6 +14,12 @@ pub struct Token {
     pub literal: Option<Literal>,
     pub line: usize,
     pub col: i64,
+}
+
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.ty == other.ty && self.lexeme == other.lexeme && self.literal == other.literal
+    }
 }
 
 impl fmt::Debug for Token {
@@ -33,12 +39,12 @@ impl fmt::Debug for Token {
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum TokenType {
     // Single-character tokens.
-    LeftParen,
-    RightParen,
-    LeftBrace,
-    RightBrace,
-    LeftBracket,
-    RightBracket,
+    LeftRoundBracket,
+    RightRoundBracket,
+    LeftCurlyBracket,
+    RightCurlyBracket,
+    LeftSquareBracket,
+    RightSquareBracket,
     Comma,
     Dot,
     Minus,

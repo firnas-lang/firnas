@@ -48,7 +48,7 @@ impl Client {
         }
     }
 
-    fn handle_repl(extentions: &Vec<Extension>) -> anyhow::Result<()> {
+    fn handle_repl(extentions: &[Extension]) -> anyhow::Result<()> {
         println!("==== Fernas repl ====");
         let extensions = firnas_ext::Extensions {
             lists: extentions.contains(&Extension::Lists),
@@ -68,7 +68,7 @@ impl Client {
         Ok(())
     }
 
-    fn handle_file(path: String, extentions: &Vec<Extension>) -> anyhow::Result<()> {
+    fn handle_file(path: String, extentions: &[Extension]) -> anyhow::Result<()> {
         let content = fs::read_to_string(path)?;
         let extensions = firnas_ext::Extensions {
             lists: extentions.contains(&Extension::Lists),

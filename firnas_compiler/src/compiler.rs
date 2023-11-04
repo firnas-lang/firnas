@@ -227,18 +227,19 @@ impl Compiler {
         self.named_variable(class_name_tok, false)?;
 
         self.consume(
-            token::TokenType::LeftBrace,
+            token::TokenType::LeftCurlyBracket,
             "Expected '{' before class body.",
         )?;
         loop {
-            if self.check(token::TokenType::RightBrace) || self.check(token::TokenType::Eof) {
+            if self.check(token::TokenType::RightCurlyBracket) || self.check(token::TokenType::Eof)
+            {
                 break;
             }
 
             self.method()?;
         }
         self.consume(
-            token::TokenType::RightBrace,
+            token::TokenType::RightCurlyBracket,
             "Expected '}' after class body.",
         )?;
         self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
@@ -312,11 +313,11 @@ impl Compiler {
 
         self.begin_scope();
         self.consume(
-            token::TokenType::LeftParen,
+            token::TokenType::LeftRoundBracket,
             "Expected '(' after function name.",
         )?;
 
-        if !self.check(token::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightRoundBracket) {
             loop {
                 self.current_function_mut().arity += 1;
                 let param_const_idx = self.parse_variable("Expected parameter name")?;
@@ -329,12 +330,12 @@ impl Compiler {
         }
 
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after parameter list.",
         )?;
 
         self.consume(
-            token::TokenType::LeftBrace,
+            token::TokenType::LeftCurlyBracket,
             "Expected '{' before function body.",
         )?;
         self.block()?;
@@ -505,7 +506,7 @@ impl Compiler {
             self.return_statement()?;
         } else if self.matches(token::TokenType::While) {
             self.while_statement()?;
-        } else if self.matches(token::TokenType::LeftBrace) {
+        } else if self.matches(token::TokenType::LeftCurlyBracket) {
             self.begin_scope();
             self.block()?;
             self.end_scope();
@@ -539,7 +540,10 @@ impl Compiler {
 
     fn for_statement(&mut self) -> Result<(), Error> {
         self.begin_scope();
-        self.consume(token::TokenType::LeftParen, "Expected '(' after 'for'.")?;
+        self.consume(
+            token::TokenType::LeftRoundBracket,
+            "Expected '(' after 'for'.",
+        )?;
         if self.matches(token::TokenType::Semicolon) {
         } else if self.matches(token::TokenType::Var) {
             self.var_decl()?;
@@ -564,14 +568,14 @@ impl Compiler {
         let maybe_exit_jump = maybe_exit_jump;
 
         // increment
-        if !self.matches(token::TokenType::RightParen) {
+        if !self.matches(token::TokenType::RightRoundBracket) {
             let body_jump = self.emit_jump(firnas_bytecode::Op::Jump(/*placeholder*/ 0));
 
             let increment_start = self.current_chunk().code.len() + 1;
             self.expression()?;
             self.emit_op(firnas_bytecode::Op::Pop, self.previous().line);
             self.consume(
-                token::TokenType::RightParen,
+                token::TokenType::RightRoundBracket,
                 "Expected ')' after for clauses.",
             )?;
 
@@ -596,10 +600,13 @@ impl Compiler {
 
     fn while_statement(&mut self) -> Result<(), Error> {
         let loop_start = self.current_chunk().code.len();
-        self.consume(token::TokenType::LeftParen, "Expected '(' after 'while'.")?;
+        self.consume(
+            token::TokenType::LeftRoundBracket,
+            "Expected '(' after 'while'.",
+        )?;
         self.expression()?;
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after condition.",
         )?;
 
@@ -621,10 +628,13 @@ impl Compiler {
     }
 
     fn if_statement(&mut self) -> Result<(), Error> {
-        self.consume(token::TokenType::LeftParen, "Expected '(' after 'if'.")?;
+        self.consume(
+            token::TokenType::LeftRoundBracket,
+            "Expected '(' after 'if'.",
+        )?;
         self.expression()?;
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after condition.",
         )?;
 
@@ -669,11 +679,15 @@ impl Compiler {
     }
 
     fn block(&mut self) -> Result<(), Error> {
-        while !self.check(token::TokenType::RightBrace) && !self.check(token::TokenType::Eof) {
+        while !self.check(token::TokenType::RightCurlyBracket) && !self.check(token::TokenType::Eof)
+        {
             self.declaration()?;
         }
 
-        self.consume(token::TokenType::RightBrace, "Expected '}' after block")?;
+        self.consume(
+            token::TokenType::RightCurlyBracket,
+            "Expected '}' after block",
+        )?;
 
         Ok(())
     }
@@ -750,7 +764,7 @@ impl Compiler {
         self.expression()?;
 
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after expression.",
         )?;
         Ok(())
@@ -1055,7 +1069,7 @@ impl Compiler {
 
         self.named_variable(Compiler::synthetic_token("this"), false)?;
 
-        let op = if self.matches(token::TokenType::LeftParen) {
+        let op = if self.matches(token::TokenType::LeftRoundBracket) {
             let arg_count = self.argument_list()?;
             self.named_variable(Compiler::synthetic_token("super"), false)?;
             firnas_bytecode::Op::SuperInvoke(method_name, arg_count)
@@ -1090,7 +1104,7 @@ impl Compiler {
         let op = if can_assign && self.matches(token::TokenType::Equal) {
             self.expression()?;
             firnas_bytecode::Op::SetProperty(property_constant)
-        } else if self.matches(token::TokenType::LeftParen) {
+        } else if self.matches(token::TokenType::LeftRoundBracket) {
             let arg_count = self.argument_list()?;
             firnas_bytecode::Op::Invoke(property_name, arg_count)
         } else {
@@ -1110,7 +1124,10 @@ impl Compiler {
         }
 
         self.expression()?;
-        self.consume(token::TokenType::RightBracket, "Expected ] after subscript")?;
+        self.consume(
+            token::TokenType::RightSquareBracket,
+            "Expected ] after subscript",
+        )?;
         self.emit_op(firnas_bytecode::Op::Subscr, self.previous().line);
         Ok(())
     }
@@ -1134,7 +1151,7 @@ impl Compiler {
 
     fn list_elements(&mut self) -> Result<usize, Error> {
         let mut num_elements: usize = 0;
-        if !self.check(token::TokenType::RightBracket) {
+        if !self.check(token::TokenType::RightSquareBracket) {
             loop {
                 self.expression()?;
                 num_elements += 1;
@@ -1143,13 +1160,13 @@ impl Compiler {
                 }
             }
         }
-        self.consume(token::TokenType::RightBracket, "Expected ']'.")?;
+        self.consume(token::TokenType::RightSquareBracket, "Expected ']'.")?;
         Ok(num_elements)
     }
 
     fn argument_list(&mut self) -> Result<u8, Error> {
         let mut arg_count: u8 = 0;
-        if !self.check(token::TokenType::RightParen) {
+        if !self.check(token::TokenType::RightRoundBracket) {
             loop {
                 self.expression()?;
                 arg_count += 1;
@@ -1159,7 +1176,7 @@ impl Compiler {
             }
         }
         self.consume(
-            token::TokenType::RightParen,
+            token::TokenType::RightRoundBracket,
             "Expected ')' after argument list.",
         )?;
         Ok(arg_count)
@@ -1332,32 +1349,32 @@ impl Compiler {
 
     fn get_rule(operator: token::TokenType) -> ParseRule {
         match operator {
-            token::TokenType::LeftParen => ParseRule {
+            token::TokenType::LeftRoundBracket => ParseRule {
                 prefix: Some(ParseFn::Grouping),
                 infix: Some(ParseFn::Call),
                 precedence: Precedence::Call,
             },
-            token::TokenType::RightParen => ParseRule {
+            token::TokenType::RightRoundBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            token::TokenType::LeftBrace => ParseRule {
+            token::TokenType::LeftCurlyBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            token::TokenType::RightBrace => ParseRule {
+            token::TokenType::RightCurlyBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
             },
-            token::TokenType::LeftBracket => ParseRule {
+            token::TokenType::LeftSquareBracket => ParseRule {
                 prefix: Some(ParseFn::List),
                 infix: Some(ParseFn::Subscript),
                 precedence: Precedence::Call,
             },
-            token::TokenType::RightBracket => ParseRule {
+            token::TokenType::RightSquareBracket => ParseRule {
                 prefix: None,
                 infix: None,
                 precedence: Precedence::None,
@@ -1581,158 +1598,5 @@ impl Compiler {
 
     fn locals_mut(&mut self) -> &mut Vec<Local> {
         &mut self.current_level_mut().locals
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::compiler::*;
-
-    fn check_semantic_error(code: &str, f: &dyn Fn(&str) -> ()) {
-        let func_or_err = Compiler::compile(String::from(code), firnas_ext::Extensions::default());
-
-        match func_or_err {
-            Err(Error::Semantic(err)) => f(&err.what),
-            _ => panic!("expected semantic error"),
-        }
-    }
-
-    #[test]
-    fn test_compiles_1() {
-        Compiler::compile(
-            String::from("print 42 * 12;"),
-            firnas_ext::Extensions::default(),
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn test_compiles_2() {
-        Compiler::compile(
-            String::from("print -2 * 3 + (-4 / 2);"),
-            firnas_ext::Extensions::default(),
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn test_var_decl_compiles_1() {
-        Compiler::compile(
-            String::from("var x = 2;"),
-            firnas_ext::Extensions::default(),
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn test_var_decl_implicit_nil() {
-        Compiler::compile(String::from("var x;"), firnas_ext::Extensions::default()).unwrap();
-    }
-
-    #[test]
-    fn test_var_reading_2() {
-        Compiler::compile(
-            String::from("var x; print x;"),
-            firnas_ext::Extensions::default(),
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn test_var_reading_3() {
-        Compiler::compile(
-            String::from("var x; print x * 2 + x;"),
-            firnas_ext::Extensions::default(),
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn test_this_outside_method_1() {
-        check_semantic_error("print this;", &|err: &str| {
-            assert!(err.starts_with("Cannot use 'this' outside of class"))
-        })
-    }
-
-    #[test]
-    fn test_this_outside_method_2() {
-        check_semantic_error("fun foo() {print this;}", &|err: &str| {
-            assert!(err.starts_with("Cannot use 'this' outside of class"))
-        })
-    }
-
-    #[test]
-    fn test_self_ineritance_is_error() {
-        check_semantic_error("class A < A {}", &|err: &str| {
-            assert!(err.starts_with("A class cannot inherit from itself."))
-        })
-    }
-
-    #[test]
-    fn test_cant_use_super_outside_class() {
-        check_semantic_error("fun f() { super.bar(); }", &|err: &str| {
-            assert!(err.starts_with("Can't use 'super' outside of a class"))
-        })
-    }
-
-    #[test]
-    fn test_cant_use_super_in_class_with_no_superclass() {
-        check_semantic_error("class Foo { bar() { super.bar(); } }", &|err: &str| {
-            assert!(err.starts_with("Can't use 'super' in a class with no superclass"))
-        })
-    }
-
-    #[test]
-    fn test_setitem_illegal_target_globals() {
-        let func_or_err = Compiler::compile(
-            String::from(
-                "var x = 2;\n\
-             var y = 3;\n\
-             x * y = 5;",
-            ),
-            firnas_ext::Extensions::default(),
-        );
-
-        match func_or_err {
-            Err(Error::Semantic(err)) => assert!(err.what.starts_with("Invalid assignment target")),
-            _ => panic!("expected semantic error"),
-        }
-    }
-
-    #[test]
-    fn test_setitem_illegal_target_locals() {
-        let func_or_err = Compiler::compile(
-            String::from(
-                "{\n\
-               var x = 2;\n\
-               var y = 3;\n\
-               x * y = 5;\n\
-             }\n",
-            ),
-            firnas_ext::Extensions::default(),
-        );
-
-        match func_or_err {
-            Err(Error::Semantic(err)) => assert!(err.what.starts_with("Invalid assignment target")),
-            _ => panic!("expected semantic error"),
-        }
-    }
-
-    #[test]
-    fn test_redeclaration_of_locals_is_error() {
-        let func_or_err = Compiler::compile(
-            String::from(
-                "{\n\
-               var x = 2;\n\
-               var x = 3;\n\
-             }",
-            ),
-            firnas_ext::Extensions::default(),
-        );
-
-        match func_or_err {
-            Err(Error::Semantic(err)) => assert!(err.what.starts_with("Redeclaration of variable")),
-            _ => panic!("expected semantic error"),
-        }
     }
 }

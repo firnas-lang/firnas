@@ -1,3 +1,5 @@
+#![cfg(feature = "en")]
+
 use firnas_tokenizer::token::Literal;
 use firnas_tokenizer::token::Token;
 use firnas_tokenizer::token::TokenType;

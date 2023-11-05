@@ -3,6 +3,11 @@ name = "firnas_tokenizer"
 version = "0.1.0"
 edition = "2021"
 
+[dependencies]
+unicode-segmentation = { version = "1.10.1", optional = true }
+arabic_utils = { version = "*", path = "../arabic_utils", optional = true }
+
 [features]
 default = ["en"]
 en = []
+ar = ["dep:unicode-segmentation", "dep:arabic_utils"]

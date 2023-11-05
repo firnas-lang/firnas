@@ -1,4 +1,4 @@
-#![cfg(feature = "en")]
+#![cfg(feature = "ar")]
 
 use firnas_compiler::compiler::Compiler;
 use firnas_compiler::compiler::Error;
@@ -15,7 +15,7 @@ fn check_semantic_error(code: &str, f: &dyn Fn(&str) -> ()) {
 #[test]
 fn test_compiles_1() {
     Compiler::compile(
-        String::from("print 42 * 12;"),
+        String::from("اطبع ٤٢ * ١٢؛"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -24,7 +24,7 @@ fn test_compiles_1() {
 #[test]
 fn test_compiles_2() {
     Compiler::compile(
-        String::from("print -2 * 3 + (-4 / 2);"),
+        String::from(r"اطبع −٢ * ٣ + (−٤ \ ٢)؛"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -32,22 +32,18 @@ fn test_compiles_2() {
 
 #[test]
 fn test_var_decl_compiles_1() {
-    Compiler::compile(
-        String::from("var x = 2;"),
-        firnas_ext::Extensions::default(),
-    )
-    .unwrap();
+    Compiler::compile(String::from("دع س = ٢؛"), firnas_ext::Extensions::default()).unwrap();
 }
 
 #[test]
 fn test_var_decl_implicit_nil() {
-    Compiler::compile(String::from("var x;"), firnas_ext::Extensions::default()).unwrap();
+    Compiler::compile(String::from("دع س؛"), firnas_ext::Extensions::default()).unwrap();
 }
 
 #[test]
 fn test_var_reading_2() {
     Compiler::compile(
-        String::from("var x; print x;"),
+        String::from("دع س؛ اطبع س؛"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -56,7 +52,7 @@ fn test_var_reading_2() {
 #[test]
 fn test_var_reading_3() {
     Compiler::compile(
-        String::from("var x; print x * 2 + x;"),
+        String::from("دع س؛ اطبع س * ٢ + س؛"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -64,35 +60,39 @@ fn test_var_reading_3() {
 
 #[test]
 fn test_this_outside_method_1() {
-    check_semantic_error("print this;", &|err: &str| {
+    check_semantic_error("اطبع هذا؛", &|err: &str| {
         assert!(err.starts_with("Cannot use 'this' outside of class"))
     })
 }
 
 #[test]
 fn test_this_outside_method_2() {
-    check_semantic_error("fun foo() {print this;}", &|err: &str| {
+    let code = "دالة فوو() { اطبع هذا؛ }";
+    check_semantic_error(code, &|err: &str| {
         assert!(err.starts_with("Cannot use 'this' outside of class"))
     })
 }
 
 #[test]
 fn test_self_ineritance_is_error() {
-    check_semantic_error("class A < A {}", &|err: &str| {
+    let code = "صنف ط < ط { }؛";
+    check_semantic_error(code, &|err: &str| {
         assert!(err.starts_with("A class cannot inherit from itself."))
     })
 }
 
 #[test]
 fn test_cant_use_super_outside_class() {
-    check_semantic_error("fun f() { super.bar(); }", &|err: &str| {
+    let code = "دالة د() { اساس.بار()؛ }؛";
+    check_semantic_error(code, &|err: &str| {
         assert!(err.starts_with("Can't use 'super' outside of a class"))
     })
 }
 
 #[test]
 fn test_cant_use_super_in_class_with_no_superclass() {
-    check_semantic_error("class Foo { bar() { super.bar(); } }", &|err: &str| {
+    let code = "صنف فوو { بار() { اساس.بار() } }؛";
+    check_semantic_error(code, &|err: &str| {
         assert!(err.starts_with("Can't use 'super' in a class with no superclass"))
     })
 }
@@ -102,9 +102,9 @@ fn test_setitem_illegal_target_globals() {
     let func_or_err = Compiler::compile(
         String::from(
             r#"
-var x = 2;
-var y = 3;
-x * y = 5;
+دع س = ٢؛
+دع ص = ٣؛
+س * ص = ٥؛
 "#,
         ),
         firnas_ext::Extensions::default(),
@@ -122,9 +122,9 @@ fn test_setitem_illegal_target_locals() {
         String::from(
             r#"
 {
-    var x = 2;
-    var y = 3;
-    x * y = 5;
+    دع س = ٢؛
+    دع ص = ٣؛
+    س * ص = ٥؛
 }
 "#,
         ),
@@ -143,8 +143,8 @@ fn test_redeclaration_of_locals_is_error() {
         String::from(
             r#"
 {
-    var x = 2;
-    var x = 3;
+    دع س = ٢؛
+    دع س = ٣؛
 }
 "#,
         ),

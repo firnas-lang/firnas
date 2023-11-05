@@ -107,11 +107,11 @@ impl Scanner {
             "}" => self.add_token(TokenType::RightCurlyBracket),
             "[" => self.add_token(TokenType::LeftSquareBracket),
             "]" => self.add_token(TokenType::RightSquareBracket),
-            "," | "،" => self.add_token(TokenType::Comma),
+            "," | "\u{060C}" => self.add_token(TokenType::Comma),
             "." => self.add_token(TokenType::Dot),
-            "-" => self.add_token(TokenType::Minus),
+            "-" | "\u{2212}" => self.add_token(TokenType::Minus),
             "+" => self.add_token(TokenType::Plus),
-            ";" => self.add_token(TokenType::Semicolon),
+            ";" | "\u{061B}" => self.add_token(TokenType::Semicolon),
             "*" => self.add_token(TokenType::Star),
             "!" => {
                 let matches_eq = self.matches("=");
@@ -145,8 +145,8 @@ impl Scanner {
                     TokenType::Greater
                 })
             }
-            "/" => {
-                if self.matches("/") {
+            "\\" => {
+                if self.matches("\\") {
                     while self.peek() != "\n" && !self.is_at_end() {
                         self.advance();
                     }

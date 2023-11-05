@@ -17,48 +17,56 @@ impl GcData {
             _ => None,
         }
     }
+
     fn as_list(&self) -> Option<&Vec<value::Value>> {
         match self {
             GcData::List(elements) => Some(elements),
             _ => None,
         }
     }
+
     fn as_list_mut(&mut self) -> Option<&mut Vec<value::Value>> {
         match self {
             GcData::List(elements) => Some(elements),
             _ => None,
         }
     }
+
     fn as_closure(&self) -> Option<&value::Closure> {
         match self {
             GcData::Closure(c) => Some(c),
             _ => None,
         }
     }
+
     fn as_bound_method(&self) -> Option<&value::BoundMethod> {
         match self {
             GcData::BoundMethod(m) => Some(m),
             _ => None,
         }
     }
+
     fn as_class(&self) -> Option<&value::Class> {
         match self {
             GcData::Class(c) => Some(c),
             _ => None,
         }
     }
+
     fn as_class_mut(&mut self) -> Option<&mut value::Class> {
         match self {
             GcData::Class(c) => Some(c),
             _ => None,
         }
     }
+
     fn as_instance(&self) -> Option<&value::Instance> {
         match self {
             GcData::Instance(inst) => Some(inst),
             _ => None,
         }
     }
+
     fn as_instance_mut(&mut self) -> Option<&mut value::Instance> {
         match self {
             GcData::Instance(inst) => Some(inst),
@@ -92,7 +100,7 @@ pub struct Heap {
 
 impl Default for Heap {
     fn default() -> Heap {
-        let next_gc = std::env::var("LOX_GC_TRIGGER_SIZE")
+        let next_gc = std::env::var("FIRNAS_GC_TRIGGER_SIZE")
             .ok()
             .and_then(|env_str| env_str.parse::<usize>().ok())
             .unwrap_or(1024 * 1024);

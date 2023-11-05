@@ -1,6 +1,7 @@
 [workspace]
-resolver = "1"
+resolver = "2"
 members = [
+    "arabic_utils",
     "firnas_bytecode",
     "firnas_cli",
     "firnas_compiler",

@@ -178,7 +178,6 @@ impl Scanner {
 
     fn is_alpha(c: &str) -> bool {
         c.chars().all(char::is_arabic_alphabetic)
-        // c.chars().all(char::is_alphabetic)
     }
 
     fn is_decimal_digit(c: &str) -> bool {
@@ -207,7 +206,7 @@ impl Scanner {
             TokenType::Identifier => self.add_token_literal(
                 TokenType::Identifier,
                 Some(Literal::Identifier(literal_val)),
-            ), // book doesn't do this. why not?}
+            ),
             _ => self.add_token(token_type),
         }
     }

@@ -8,7 +8,7 @@ use firnas_tokenizer::tokenizer::scan_tokens;
 #[test]
 fn it_should_tokenize_single_char_token() {
     assert_eq!(
-        scan_tokens("( ) [ ] { } , . - + ; / *".to_owned()).unwrap(),
+        scan_tokens("( ) [ ] { } , . - + ; \\ *".to_owned()).unwrap(),
         vec![
             Token {
                 ty: TokenType::LeftRoundBracket,
@@ -89,7 +89,7 @@ fn it_should_tokenize_single_char_token() {
             },
             Token {
                 ty: TokenType::Slash,
-                lexeme: String::from("/"),
+                lexeme: String::from("\\"),
                 literal: None,
                 line: 1,
                 col: 0

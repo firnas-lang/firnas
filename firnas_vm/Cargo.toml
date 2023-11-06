@@ -6,4 +6,9 @@ edition = "2021"
 [dependencies]
 firnas_ext = { version = "*", path = "../firnas_ext" }
 firnas_bytecode = { version = "*", path = "../firnas_bytecode" }
-firnas_compiler = { version = "*", path = "../firnas_compiler" }
+firnas_compiler = { version = "*", path = "../firnas_compiler", default-features = false }
+
+[features]
+default = ["en"]
+en = ["firnas_compiler/en"]
+ar = ["firnas_compiler/ar"]

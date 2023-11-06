@@ -1,3 +1,5 @@
+#![cfg(feature = "en")]
+
 use firnas_compiler::compiler::*;
 use firnas_ext;
 use firnas_vm::virtual_machine::*;

@@ -185,7 +185,7 @@ impl Scanner {
     }
 
     fn is_alphanumeric(c: &str) -> bool {
-        Scanner::is_alpha(c) || Scanner::is_decimal_digit(c)
+        Scanner::is_alpha(c) || Scanner::is_decimal_digit(c) || c == "_"
     }
 
     fn identifier(&mut self) {

@@ -1,5 +1,6 @@
 use crate::gc;
 use crate::stdlib;
+use crate::stdlib::time::std_time_clock;
 use crate::value;
 use firnas_bytecode;
 use std::cell::RefCell;
@@ -61,14 +62,8 @@ impl Default for VirtualMachine {
                 func: stdlib::debug::dis_builtin,
             }),
         );
-        res.globals.insert(
-            String::from("clock"),
-            value::Value::NativeFunction(value::NativeFunction {
-                arity: 0,
-                name: String::from("clock"),
-                func: stdlib::time::clock,
-            }),
-        );
+        let clock = std_time_clock();
+        res.globals.insert(clock.0, clock.1);
         res.globals.insert(
             String::from("exp"),
             value::Value::NativeFunction(value::NativeFunction {

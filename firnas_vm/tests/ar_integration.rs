@@ -367,262 +367,261 @@ fn test_for() {
     );
 }
 
-// #[test]
-// fn test_functions_1() {
-//     check_output_default(
-//         r#"
-// fun areWeHavingItYet() {
-//     print "Yes we are!";
-// }
+#[test]
+fn test_functions_1() {
+    check_output_default(
+        r#"
+دالة هل_سنحصل_عليها() {
+    اطبع "اجل"؛
+}
 
-// print areWeHavingItYet;
-// "#,
-//         &vec_of_strings!["<fn 'areWeHavingItYet'>"],
-//     )
-// }
+اطبع هل_سنحصل_عليها؛
+"#,
+        &vec_of_strings!["<fn 'هل_سنحصل_عليها'>"],
+    )
+}
 
-// #[test]
-// fn test_functions_2() {
-//     check_output_default(
-//         r#"
-// fun f(x, y) {
-//     print x + y;
-// }
+#[test]
+fn test_functions_2() {
+    check_output_default(
+        r#"
+دالة د(س، ص) {
+    اطبع س + ص؛
+}
 
-// print f;
-// "#,
-//         &vec_of_strings!["<fn 'f'>"],
-//     )
-// }
+اطبع د؛
+"#,
+        &vec_of_strings!["<fn 'د'>"],
+    )
+}
 
-// #[test]
-// fn test_functions_3() {
-//     check_output_default(
-//         r#"
-// fun f(x, y) {
-//     return x + y;
-// }
+#[test]
+fn test_functions_3() {
+    check_output_default(
+        r#"
+دالة د(س، ص) {
+    رد س + ص؛
+}
 
-// print f;
-// "#,
-//         &vec_of_strings!["<fn 'f'>"],
-//     )
-// }
+اطبع د؛
+"#,
+        &vec_of_strings!["<fn 'د'>"],
+    )
+}
 
-// #[test]
-// fn test_functions_4() {
-//     check_output_default(
-//         r#"
-// fun f() {
-//     return;
-// }
+#[test]
+fn test_functions_4() {
+    check_output_default(
+        r#"
+دالة د() {
+    رد؛
+}
 
-// print f();
-// "#,
-//         &vec_of_strings!["nil"],
-//     )
-// }
+اطبع د()؛
+"#,
+        &vec_of_strings!["nil"],
+    )
+}
 
-// #[test]
-// fn test_functions_5() {
-//     check_error_default("return 42;", &|err: &str| {
-//         assert_eq!(err, "Cannot return from top-level code.")
-//     })
-// }
+#[test]
+fn test_functions_5() {
+    check_error_default("رد ٤٢؛", &|err: &str| {
+        assert_eq!(err, "Cannot return from top-level code.")
+    })
+}
 
-// #[test]
-// fn test_functions_6() {
-//     check_output_default(
-//         r#"
-// fun f(x, y) {
-//     return x + y;
-// }
+#[test]
+fn test_functions_6() {
+    check_output_default(
+        r#"
+دالة د(س، ص) {
+    رد س + ص؛
+}
 
-// print f(1,2);
-// "#,
-//         &vec_of_strings!["3"],
-//     );
-// }
+اطبع د(١،٢)؛
+"#,
+        &vec_of_strings!["3"],
+    );
+}
 
-// #[test]
-// fn test_functions_7() {
-//     check_output_default(
-//         r#"
-// fun g(x) {
-//     return 2 * x;
-// }
+#[test]
+fn test_functions_7() {
+    check_output_default(
+        r#"
+دالة ت(س) {
+    رد ٢ * س؛
+}
 
-// fun f(x, y) {
-//     return g(x) + y;
-// }
+دالة د(س، ص) {
+    رد ت(س) + ص؛
+}
 
-// print f(1,2);
-// "#,
-//         &vec_of_strings!["4"],
-//     );
-// }
+اطبع د(١، ٢)؛
+"#,
+        &vec_of_strings!["4"],
+    );
+}
 
-// #[test]
-// fn test_functions_8() {
-//     check_output_default(
-//         r#"
-// var x = 2;
-// fun f(x) {
-//     print 2 * x;
-// }
+#[test]
+fn test_functions_8() {
+    check_output_default(
+        r#"
+دع س = ٢؛
+دالة د(س) {
+    اطبع ٢ * س؛
+}
 
-// f(x);
-// print x;
-// "#,
-//         &vec_of_strings!["4", "2"],
-//     );
-// }
+د(س)؛
+اطبع س؛
+"#,
+        &vec_of_strings!["4", "2"],
+    );
+}
 
-// #[test]
-// fn test_functions_9() {
-//     fn fact(n: i32) -> i32 {
-//         if n <= 1 {
-//             return 1;
-//         }
-//         return n * fact(n - 1);
-//     }
+#[test]
+fn test_functions_9() {
+    fn fact(n: i32) -> i32 {
+        if n <= 1 {
+            return 1;
+        }
+        return n * fact(n - 1);
+    }
 
-//     check_output_default(
-//         r#"
-// fun fact(n) {
-//     if (n <= 1) { return 1; }
-//     return n * fact(n - 1);
-// }
+    check_output_default(
+        r#"
+دالة مضروب(س) {
+    لو (س<= ١) { رد ١؛ }
+    رد س * مضروب(س − ١)؛
+}
 
-// print fact(10);
-// "#,
-//         &vec_of_strings![format!("{}", fact(10))],
-//     );
-// }
+اطبع مضروب(١٠)؛
+"#,
+        &vec_of_strings![format!("{}", fact(10))],
+    );
+}
 
-// #[test]
-// fn test_functions_10() {
-//     check_output_default(
-//         r#"
-// fun isEven(n) {
-//     if (n = 0) { return true; }
-//     return isOdd(n - 1);
-// }
+#[test]
+fn test_functions_10() {
+    check_output_default(
+        r#"
+دالة هل_الرقم_زوجي(س) {
+    لو (س ==  ٠) { رد صحيح؛ }
+    رد هل_الرقم_فردي(س − ١)؛
+}
 
-// fun isOdd(n) {
-//     if (n = 1) { return true; }
-//     return isEven(n - 1);
-// }
+دالة هل_الرقم_فردي(س) {
+    لو (س ==  ١) { رد صحيح؛ }
+    رد هل_الرقم_زوجي(س − ١)؛
+}
 
-// print isEven(10);
-// "#,
-//         &vec_of_strings!["true"],
-//     );
-// }
+اطبع هل_الرقم_زوجي(١٠)؛
+"#,
+        &vec_of_strings!["true"],
+    );
+}
 
-// #[test]
-// fn test_native_functions() {
-//     let res = evaluate(
-//         r#"
-// fun fib(n) {
-//     if (n < 2) return n;
-//     return fib(n - 2) + fib(n - 1);
-// }
+#[test]
+fn test_native_functions() {
+    let res = evaluate(
+        r#"
+دالة فيبوناتشي(س) {
+    لو(س < ٢) رد س؛
+    رد فيبوناتشي(س − ٢) + فيبوناتشي(س − ١)؛
+}
 
-// var start = clock();
-// print fib(5);
-// print clock() - start;
-// print 42;
-// "#,
-//         firnas_ext::Extensions::default(),
-//     );
+دع البداية = ساعة()؛
+اطبع فيبوناتشي(٥)؛
+اطبع ساعة() − البداية؛
+اطبع ٤٢؛
+"#,
+        firnas_ext::Extensions::default(),
+    );
 
-//     match res {
-//         Ok(output) => {
-//             assert_eq!(output.len(), 3);
-//             assert_eq!(output[0], "5");
-//             assert_eq!(output[2], "42");
-//         }
-//         Err(err) => {
-//             panic!("{:?}", err);
-//         }
-//     }
-// }
+    match res {
+        Ok(output) => {
+            assert_eq!(output.len(), 3);
+            assert_eq!(output[0], "5");
+            assert_eq!(output[2], "42");
+        }
+        Err(err) => {
+            panic!("{:?}", err);
+        }
+    }
+}
 
-// #[test]
-// fn test_get_upval_on_stack() {
-//     check_output_default(
-//         r#"
-// fun outer() {
-//     var x = "outside";
-//     fun inner() {
-//         print x;
-//     }
-//     inner();
-// }
-// outer();
-// "#,
-//         &vec_of_strings!["outside"],
-//     );
-// }
+#[test]
+fn test_get_upval_on_stack() {
+    check_output_default(
+        r#"
+دالة خارجي() {
+    دع س = "في خارجي"؛
+    دالة داخلي() {
+        اطبع س؛
+    }
+    داخلي()؛
+}
+خارجي()؛
+"#,
+        &vec_of_strings!["في خارجي"],
+    );
+}
 
-// #[test]
-// fn test_set_upval_on_stack() {
-//     check_output_default(
-//         r#"
-// fun outer() {
-//     var x = "before";
-//     fun inner() {
-//         x = "assigned";
-//     }
-//     inner();
-//     print x;
-// }
-// outer();
-// "#,
-//         &vec_of_strings!["assigned"],
-//     );
-// }
+#[test]
+fn test_set_upval_on_stack() {
+    check_output_default(
+        r#"
+دالة خارجي() {
+    دع س = "قبل"؛
+    دالة داخلي() {
+        س = "مكلف"؛
+    }
+    داخلي()؛
+    اطبع س؛
+}
+خارجي()؛
+"#,
+        &vec_of_strings!["مكلف"],
+    );
+}
 
-// #[test]
-// fn test_closing_upvals_after_return() {
-//     check_output_default(
-//         r#"
-// fun outer() {
-//     var x = "outside";
-//     fun inner() {
-//         print x;
-//     }
+#[test]
+fn test_closing_upvals_after_return() {
+    check_output_default(
+        r#"
+دالة خارجي() {
+    دع س = "خارج"؛
+    دالة دخلي() {
+        اطبع س؛
+    }
+    رد دخلي؛
+}
 
-//     return inner;
-// }
+دع مقفل = خارجي()؛
+مقفل()؛
+"#,
+        &vec_of_strings!["خارج"],
+    );
+}
 
-// var closure = outer();
-// closure();
-// "#,
-//         &vec_of_strings!["outside"],
-//     );
-// }
+#[test]
+fn test_closing_upvals_after_scope() {
+    check_output_default(
+        r#"
+دع مغلق؛
+{
+    دع س = "خارج"؛
+    دالة داخلي() {
+        اطبع س؛
+    }
 
-// #[test]
-// fn test_closing_upvals_after_scope() {
-//     check_output_default(
-//         r#"
-// var closure;
-// {
-//     var x = "outside";
-//     fun inner() {
-//         print x;
-//     }
+    مغلق = داخلي؛
+}
 
-//     closure = inner;
-// }
-
-// closure();
-// "#,
-//         &vec_of_strings!["outside"],
-//     );
-// }
+مغلق()؛
+"#,
+        &vec_of_strings!["خارج"],
+    );
+}
 
 // #[test]
 // fn test_classes_1() {

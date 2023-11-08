@@ -1,7 +1,43 @@
+use super::StdFunc;
 use crate::value;
+use crate::value::NativeFunction;
 use crate::virtual_machine;
 
-pub fn exp(
+pub fn std_math_exp() -> StdFunc {
+    let name = if cfg!(feature = "ar") {
+        String::from("التوزيع_الأسي")
+    } else {
+        String::from("exp")
+    };
+
+    StdFunc {
+        name: name.clone(),
+        func: value::Value::NativeFunction(NativeFunction {
+            arity: 0,
+            name,
+            func: exp,
+        }),
+    }
+}
+
+pub fn std_math_sqrt() -> StdFunc {
+    let name = if cfg!(feature = "ar") {
+        String::from("الجذر_التربيعي")
+    } else {
+        String::from("sqrt")
+    };
+
+    StdFunc {
+        name: name.clone(),
+        func: value::Value::NativeFunction(NativeFunction {
+            arity: 0,
+            name,
+            func: sqrt,
+        }),
+    }
+}
+
+fn exp(
     _interp: &mut virtual_machine::VirtualMachine,
     args: &[value::Value],
 ) -> Result<value::Value, String> {
@@ -14,7 +50,7 @@ pub fn exp(
     }
 }
 
-pub fn sqrt(
+fn sqrt(
     _interp: &mut virtual_machine::VirtualMachine,
     args: &[value::Value],
 ) -> Result<value::Value, String> {

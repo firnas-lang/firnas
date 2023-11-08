@@ -1,24 +1,25 @@
+use super::StdFunc;
 use crate::value;
 use crate::value::NativeFunction;
 use crate::virtual_machine;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
 
-pub fn std_time_clock() -> (String, value::Value) {
+pub fn std_time_clock() -> StdFunc {
     let name = if cfg!(feature = "ar") {
         String::from("ساعة")
     } else {
         String::from("clock")
     };
 
-    (
-        name.clone(),
-        value::Value::NativeFunction(NativeFunction {
+    StdFunc {
+        name: name.clone(),
+        func: value::Value::NativeFunction(NativeFunction {
             arity: 0,
             name,
             func: clock,
         }),
-    )
+    }
 }
 
 fn clock(

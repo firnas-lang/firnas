@@ -1,6 +1,10 @@
 use crate::gc;
 use crate::stdlib;
+use crate::stdlib::io::std_io_print_line;
+use crate::stdlib::math::std_math_exp;
+use crate::stdlib::math::std_math_sqrt;
 use crate::stdlib::time::std_time_clock;
+use crate::stdlib::StdFunc;
 use crate::value;
 use firnas_bytecode;
 use std::cell::RefCell;
@@ -30,6 +34,10 @@ impl VirtualMachine {
     pub fn get_output(&self) -> Vec<String> {
         self.output.clone()
     }
+
+    fn add_std_func(&mut self, std_func: StdFunc) {
+        self.globals.insert(std_func.name, std_func.func);
+    }
 }
 
 impl Default for VirtualMachine {
@@ -46,38 +54,17 @@ impl Default for VirtualMachine {
         res.stack.reserve(256);
         res.frames.reserve(64);
 
-        res.globals.insert(
-            String::from("printLine"),
-            value::Value::NativeFunction(value::NativeFunction {
-                arity: 1,
-                name: String::from("printLine"),
-                func: stdlib::io::print_line,
-            }),
-        );
+        res.add_std_func(std_io_print_line());
+        res.add_std_func(std_time_clock());
+        res.add_std_func(std_math_exp());
+        res.add_std_func(std_math_sqrt());
+
         res.globals.insert(
             String::from("dis"),
             value::Value::NativeFunction(value::NativeFunction {
                 arity: 1,
                 name: String::from("dis"),
                 func: stdlib::debug::dis_builtin,
-            }),
-        );
-        let clock = std_time_clock();
-        res.globals.insert(clock.0, clock.1);
-        res.globals.insert(
-            String::from("exp"),
-            value::Value::NativeFunction(value::NativeFunction {
-                arity: 1,
-                name: String::from("exp"),
-                func: stdlib::math::exp,
-            }),
-        );
-        res.globals.insert(
-            String::from("sqrt"),
-            value::Value::NativeFunction(value::NativeFunction {
-                arity: 1,
-                name: String::from("sqrt"),
-                func: stdlib::math::sqrt,
             }),
         );
         res.globals.insert(

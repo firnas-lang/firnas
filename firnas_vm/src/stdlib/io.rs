@@ -1,7 +1,27 @@
 use crate::value;
+use crate::value::NativeFunction;
 use crate::virtual_machine;
 
-pub(crate) fn print_line(
+use super::StdFunc;
+
+pub fn std_io_print_line() -> StdFunc {
+    let name = if cfg!(feature = "ar") {
+        String::from("اطبع_سطر")
+    } else {
+        String::from("printLine")
+    };
+
+    StdFunc {
+        name: name.clone(),
+        func: value::Value::NativeFunction(NativeFunction {
+            arity: 0,
+            name,
+            func: print_line,
+        }),
+    }
+}
+
+fn print_line(
     vm: &mut virtual_machine::VirtualMachine,
     args: &[value::Value],
 ) -> Result<value::Value, String> {

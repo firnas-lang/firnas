@@ -40,17 +40,6 @@ fn check_output_default(code: &str, expected_output: &[String]) {
     check_output(code, firnas_ext::Extensions::default(), expected_output);
 }
 
-fn check_output_lists(code: &str, expected_output: &[String]) {
-    check_output(
-        code,
-        firnas_ext::Extensions {
-            lists: true,
-            ..Default::default()
-        },
-        expected_output,
-    );
-}
-
 fn check_error(code: &str, extensions: firnas_ext::Extensions, f: &dyn Fn(&str) -> ()) {
     let res = evaluate(code, extensions);
 

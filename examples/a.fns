@@ -1,0 +1,5 @@
+var x = 4;
+print exp(x);
+printLine(exp(x) + 2);
+printL("Hello World");
+printL(exp(x) + 2);

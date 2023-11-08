@@ -13,7 +13,7 @@ pub fn std_math_exp() -> StdFunc {
     StdFunc {
         name: name.clone(),
         func: value::Value::NativeFunction(NativeFunction {
-            arity: 0,
+            arity: 1,
             name,
             func: exp,
         }),
@@ -30,7 +30,7 @@ pub fn std_math_sqrt() -> StdFunc {
     StdFunc {
         name: name.clone(),
         func: value::Value::NativeFunction(NativeFunction {
-            arity: 0,
+            arity: 1,
             name,
             func: sqrt,
         }),

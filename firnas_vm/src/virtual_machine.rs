@@ -1,5 +1,6 @@
 use crate::gc;
 use crate::stdlib;
+use crate::stdlib::io::std_io_print;
 use crate::stdlib::io::std_io_print_line;
 use crate::stdlib::math::std_math_exp;
 use crate::stdlib::math::std_math_sqrt;
@@ -54,6 +55,7 @@ impl Default for VirtualMachine {
         res.stack.reserve(256);
         res.frames.reserve(64);
 
+        res.add_std_func(std_io_print());
         res.add_std_func(std_io_print_line());
         res.add_std_func(std_time_clock());
         res.add_std_func(std_math_exp());

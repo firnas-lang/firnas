@@ -270,7 +270,13 @@ impl Compiler {
 
         let constant = self.identifier_constant(method_name.clone());
 
-        let function_type = if method_name == "init" {
+        let init_name = if cfg!(feature = "en") {
+            "init"
+        } else {
+            "تهيئة"
+        };
+
+        let function_type = if method_name == init_name {
             FunctionType::Initializer
         } else {
             FunctionType::Method

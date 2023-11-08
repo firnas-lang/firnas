@@ -623,479 +623,382 @@ fn test_closing_upvals_after_scope() {
     );
 }
 
-// #[test]
-// fn test_classes_1() {
-//     check_output_default(
-//         r#"
-// class Brioche {}
-// print Brioche;
-// "#,
-//         &vec_of_strings!["<class 'Brioche'>"],
-//     );
-// }
+#[test]
+fn test_classes_1() {
+    check_output_default(
+        r#"
+صنف ص_بشر {}
+اطبع ص_بشر؛
+"#,
+        &vec_of_strings!["<class 'ص_بشر'>"],
+    );
+}
 
-// #[test]
-// fn test_classes_instances_1() {
-//     check_output_default(
-//         r#"
-// class Brioche {}
-// var instance = Brioche();
-// print instance;
-// "#,
-//         &vec_of_strings!["<Brioche instance>"],
-//     );
-// }
+#[test]
+fn test_classes_instances_1() {
+    check_output_default(
+        r#"
+صنف ص_بشر {}
+دع مثال = ص_بشر()؛
+اطبع مثال؛
+"#,
+        &vec_of_strings!["<ص_بشر instance>"],
+    );
+}
 
-// #[test]
-// fn test_setattr_1() {
-//     check_output_default(
-//         r#"
-// class Foo {}
-// var foo = Foo();
-// foo.attr = 42;
-// print foo.attr;
-// "#,
-//         &vec_of_strings!["42"],
-//     );
-// }
+#[test]
+fn test_setattr_1() {
+    check_output_default(
+        r#"
+صنف ص_فوو {}
+دع فوو = ص_فوو()؛
+فوو.صفة = ٤٢؛
+اطبع فوو.صفة؛
+"#,
+        &vec_of_strings!["42"],
+    );
+}
 
-// #[test]
-// fn test_setattr_2() {
-//     check_output_default(
-//         r#"
-// class Toast {}
-// var toast = Toast();
-// print toast.jam = "grape";
-// "#,
-//         &vec_of_strings!["grape"],
-//     );
-// }
+#[test]
+fn test_setattr_2() {
+    check_output_default(
+        r#"
+صنف ص_خبز_محمص {}
+دع خبز_محمص = ص_خبز_محمص()؛
+خبز_محمص.مربى = "عنب"؛
+اطبع خبز_محمص.مربى؛
+"#,
+        &vec_of_strings!["عنب"],
+    );
+}
 
-// #[test]
-// fn test_setattr_3() {
-//     check_output_default(
-//         r#"
-// class Pair {}
-// var pair = Pair();
-// pair.first = 1;
-// pair.second = 2;
-// print pair.first + pair.second;
-// "#,
-//         &vec_of_strings!["3"],
-//     );
-// }
+#[test]
+fn test_setattr_3() {
+    check_output_default(
+        r#"
+صنف ص_زوج {}
+دع زوج = ص_زوج()؛
+زوج.اول = ١؛
+زوج.ثاني = ٢؛
+اطبع زوج.اول + زوج.ثاني؛
+"#,
+        &vec_of_strings!["3"],
+    );
+}
 
-// #[test]
-// fn test_bound_methods_1() {
-//     check_output_default(
-//         r#"
-// class Foo {
-//     bar() {
-//         return 42;
-//     }
-// }
+#[test]
+fn test_bound_methods_1() {
+    check_output_default(
+        r#"
+صنف ص_فوو {
+    بار() {
+        رد ٤٢؛
+    }
+}
 
-// var foo = Foo();
-// print foo.bar;
-// "#,
-//         &vec_of_strings!["<bound method of Foo instance>"],
-//     );
-// }
+دع فوو = ص_فوو()؛
+اطبع فوو.بار؛
+"#,
+        &vec_of_strings!["<bound method of ص_فوو instance>"],
+    );
+}
 
-// #[test]
-// fn test_calling_bound_methods_no_this() {
-//     check_output_default(
-//         r#"
-// class Scone {
-//     topping(first, second) {
-//         print "scone with " + first + " and " + second;
-//     }
-// }
+#[test]
+fn test_calling_bound_methods_no_this() {
+    check_output_default(
+        r#"
+صنف كعك {
+    إضافات(اول، ثاني) {
+        اطبع "كعكة مع " + اول + " و " + ثاني؛
+    }
+}
 
-// var scone = Scone();
-// scone.topping("berries", "cream");
-// "#,
-//         &vec_of_strings!["scone with berries and cream"],
-//     );
-// }
+دع كعكة = كعك()؛
+كعكة.إضافات("توت"، "كريمة")؛
+"#,
+        &vec_of_strings!["كعكة مع توت و كريمة"],
+    );
+}
 
-// #[test]
-// fn test_calling_bound_methods_with_this_1() {
-//     check_output_default(
-//         r#"
-// class Nested {
-//     method() {
-//         print this;
-//     }
-// }
+#[test]
+fn test_calling_bound_methods_with_this_1() {
+    check_output_default(
+        r#"
+صنف متداخلة {
+    وظيفة() {
+        اطبع هذا؛
+    }
+}
 
-// Nested().method();
-// "#,
-//         &vec_of_strings!["<Nested instance>"],
-//     );
-// }
+متداخلة().وظيفة()؛
+"#,
+        &vec_of_strings!["<متداخلة instance>"],
+    );
+}
 
-// #[test]
-// fn test_calling_bound_methods_with_this_2() {
-//     check_output_default(
-//         r#"
-// class Nested {
-//     method() {
-//         fun function() {
-//             print this;
-//         }
+#[test]
+fn test_calling_bound_methods_with_this_2() {
+    check_output_default(
+        r#"
+صنف متداخلة {
+    وظيفة() {
+        دالة د() {
+            اطبع هذا؛
+        }
 
-//         function();
-//     }
-// }
+        د()؛
+    }
+}
 
-// Nested().method();
-// "#,
-//         &vec_of_strings!["<Nested instance>"],
-//     );
-// }
+متداخلة().وظيفة()؛
+"#,
+        &vec_of_strings!["<متداخلة instance>"],
+    );
+}
 
-// #[test]
-// fn test_multiple_method_definitions() {
-//     check_output_default(
-//         r#"
-// class Brunch {
-//     bacon() {}
-//     eggs() {}
-// }
-// print Brunch().bacon();
-// "#,
-//         &vec_of_strings!["nil"],
-//     );
-// }
+#[test]
+fn test_multiple_method_definitions() {
+    check_output_default(
+        r#"
+صنف فطور {
+    بيض() {}
+    جبنة() {}
+}
 
-// #[test]
-// fn test_init_1() {
-//     check_output_default(
-//         r#"
-// class Brunch {
-//     init(x) {this.x = x;}
-//     eggs(y) {return this.x + y;}
-// }
-// print Brunch(2).eggs(3);
-// "#,
-//         &vec_of_strings!["5"],
-//     );
-// }
+اطبع فطور().جبنة()؛
+"#,
+        &vec_of_strings!["nil"],
+    );
+}
 
-// #[test]
-// fn test_invoking_fields() {
-//     check_output_default(
-//         r#"
-// class Oops {
-//     init() {
-//         fun f() {
-//             print "not a method";
-//         }
+#[test]
+fn test_init_1() {
+    check_output_default(
+        r#"
+صنف فطور {
+    تهيئة(س) { هذا.س = س؛ }
+    بيض(ص) { رد هذا.س + ص؛ }
+}
 
-//         this.field = f;
-//     }
-// }
+اطبع فطور(٢).بيض(٣)؛
+"#,
+        &vec_of_strings!["5"],
+    );
+}
 
-// var oops = Oops();
-// oops.field();
-// "#,
-//         &vec_of_strings!["not a method"],
-//     );
-// }
+#[test]
+fn test_invoking_fields() {
+    check_output_default(
+        r#"
+صنف ص_أووبس {
+    تهيئة() {
+        دالة د() {
+            اطبع "ليست وظيفة"؛
+        }
 
-// #[test]
-// fn test_inheritance_1() {
-//     check_output_default(
-//         r#"
-// class A {
-//     f() {
-//         return "cat";
-//     }
-// }
-// class B < A {}
-// var b = B();
-// print b.f();
-// "#,
-//         &vec_of_strings!["cat"],
-//     );
-// }
+        هذا.حقل = د؛
+    }
+}
 
-// #[test]
-// fn test_inheritance_2() {
-//     check_output_default(
-//         r#"
-// class A {
-//     f() {
-//         return "cat";
-//     }
-// }
-// class B < A {}
-// class C < B {}
-// var c = C();
-// print c.f();
-// "#,
-//         &vec_of_strings!["cat"],
-//     );
-// }
+دع أووبس = ص_أووبس()؛
+أووبس.حقل()؛
+"#,
+        &vec_of_strings!["ليست وظيفة"],
+    );
+}
 
-// #[test]
-// fn test_inheritance_3() {
-//     check_output_default(
-//         r#"
-// class A {
-//     f() {
-//         return this.attr;
-//     }
-// }
-// class B < A {
-//     init(attr) {
-//         this.attr = attr;
-//     }
-// }
+#[test]
+fn test_inheritance_1() {
+    check_output_default(
+        r#"
+صنف ص_أ {
+    د() {
+        رد "قطة"؛
+    }
+}
+صنف ص_ب < ص_أ { }
 
-// var b = B(42);
-// print b.f();
-// "#,
-//         &vec_of_strings!["42"],
-//     );
-// }
+دع ب = ص_ب()؛
+اطبع ب.د()؛
+"#,
+        &vec_of_strings!["قطة"],
+    );
+}
 
-// #[test]
-// fn test_inheritance_4() {
-//     check_output_default(
-//         r#"
-// class A {
-//     f() {
-//         return this.attr;
-//     }
-// }
-// class B < A {
-// }
-// var b = B();
-// b.attr = 42;
-// print b.f();
-// "#,
-//         &vec_of_strings!["42"],
-//     );
-// }
+#[test]
+fn test_inheritance_2() {
+    check_output_default(
+        r#"
+صنف ص_أ {
+    د() {
+        رد "قطة"؛
+    }
+}
+صنف ص_ب < ص_أ { }
+صنف ص_ت < ص_ب { }
+دع ت = ص_ت()؛
+اطبع ت.د()؛
+"#,
+        &vec_of_strings!["قطة"],
+    );
+}
 
-// #[test]
-// fn test_inheriting_non_class() {
-//     check_error_default(
-//         r#"
-// var NotClass = "So not a class";
-// class OhNo < NotClass {}
-// "#,
-//         &|err: &str| assert!(err.starts_with("Superclass must be a class, found String at lineno=")),
-//     )
-// }
+#[test]
+fn test_inheritance_3() {
+    check_output_default(
+        r#"
+صنف ص_أ {
+    د() {
+        رد هذا.حقل؛
+    }
+}
+صنف ص_ب < ص_أ {
+    تهيئة(حقل) {
+        هذا.حقل = حقل؛
+    }
+}
 
-// #[test]
-// fn test_super_1() {
-//     check_output_default(
-//         r#"
-// class A {
-//     method() {
-//         print "A method";
-//     }
-// }
+دع ب = ص_ب(٤٢)؛
+اطبع ب.د()؛
+"#,
+        &vec_of_strings!["42"],
+    );
+}
 
-// class B < A {
-//     method() {
-//         print "B method";
-//     }
+#[test]
+fn test_inheritance_4() {
+    check_output_default(
+        r#"
+صنف ص_أ {
+    د() {
+        رد هذا.حقل؛
+    }
+}
+صنف ص_ب < ص_أ { }
 
-//     test() {
-//         super.method();
-//     }
-// }
+دع ب = ص_ب()؛
+ب.حقل = ٤٢؛
+اطبع ب.د()؛
+"#,
+        &vec_of_strings!["42"],
+    );
+}
 
-// class C < B {}
+#[test]
+fn test_inheriting_non_class() {
+    check_error_default(
+        r#"
+دع ليس_بصنف = ""؛
+صنف كلا < ليس_بصنف { }
+"#,
+        &|err: &str| assert!(err.starts_with("Superclass must be a class, found String at lineno=")),
+    )
+}
 
-// C().test();
-// "#,
-//         &vec_of_strings!["A method"],
-//     )
-// }
+#[test]
+fn test_super_1() {
+    check_output_default(
+        r#"
+صنف ص_أ {
+    وظيفة() {
+        اطبع "أ وظيفة"؛
+    }
+}
 
-// #[test]
-// fn test_super_2() {
-//     check_output_default(
-//         r#"
-// class A {
-//     method() {
-//         print "A method";
-//     }
-// }
+صنف ص_ب < ص_أ {
+    وظيفة() {
+        اطبع "ب وظيفة"؛
+    }
 
-// class B < A {
-//     method() {
-//         print "B method";
-//     }
+    اختبار() {
+        اساس.وظيفة()؛
+    }
+}
 
-//     test() {
-//         var func = super.method;
-//         func();
-//     }
-// }
+صنف ص_ت < ص_ب { }
 
-// class C < B {}
+ص_ت().اختبار()؛
+"#,
+        &vec_of_strings!["أ وظيفة"],
+    )
+}
 
-// C().test();
-// "#,
-//         &vec_of_strings!["A method"],
-//     )
-// }
+#[test]
+fn test_super_2() {
+    check_output_default(
+        r#"
+صنف ص_أ {
+    وظيفة() {
+        اطبع "أ وظيفة"؛
+    }
+}
 
-// #[test]
-// fn test_super_3() {
-//     check_output_default(
-//         r#"
-// class Doughnut {
-//     cook() {
-//         print "Dunk in the fryer.";
-//         this.finish("sprinkles");
-//     }
+صنف ص_ب < ص_أ {
+    وظيفة() {
+        اطبع "ب وظيفة"؛
+    }
 
-//     finish(ingredient) {
-//         print "Finish with " + ingredient;
-//     }
-// }
+    اختبار() {
+        دع د = اساس.وظيفة؛
+        د()؛
+    }
+}
 
-// class Cruller < Doughnut {
-//     finish(ingredient) {
-//         // No sprinkles.
-//         super.finish("icing");
-//     }
-// }
+صنف ص_ت < ص_ب { }
 
-// Doughnut().cook();
-// Cruller().cook();
-// "#,
-//         &vec_of_strings![
-//             "Dunk in the fryer.",
-//             "Finish with sprinkles",
-//             "Dunk in the fryer.",
-//             "Finish with icing"
-//         ],
-//     )
-// }
+ص_ت().اختبار()؛
+"#,
+        &vec_of_strings!["أ وظيفة"],
+    )
+}
 
-// #[test]
-// fn test_late_binding() {
-//     check_output_default(
-//         r#"
-// fun a() { b(); }
-// fun b() { print "hello world"; }
+#[test]
+fn test_super_3() {
+    check_output_default(
+        r#"
+صنف كعكة_محلاة {
+    اطبخ() {
+        اطبع "ضعها في المقلاة"؛
+        هذا.انهي("الرشات")؛
+    }
 
-// a();
-// "#,
-//         &vec_of_strings!["hello world"],
-//     )
-// }
+    انهي(المكونات) {
+        اطبع "انهي ب" + المكونات؛
+    }
+}
 
-// #[test]
-// fn test_list_building() {
-//     check_output_lists("print([1,2,3]);", &vec_of_strings!["[1, 2, 3]"])
-// }
+صنف صنف_كرولر < كعكة_محلاة {
+    انهي(المكونات) {
+        اساس.انهي("تثليج")؛
+    }
+}
 
-// #[test]
-// fn test_empty_list_building() {
-//     check_output_lists("print([]);", &vec_of_strings!["[]"])
-// }
+كعكة_محلاة().اطبخ()؛
+صنف_كرولر().اطبخ()؛
+"#,
+        &vec_of_strings![
+            "ضعها في المقلاة",
+            "انهي بالرشات",
+            "ضعها في المقلاة",
+            "انهي بتثليج"
+        ],
+    )
+}
 
-// #[test]
-// fn test_list_concat() {
-//     check_output_lists(
-//         "print([1,2,3] + [4,5,6]);",
-//         &vec_of_strings!["[1, 2, 3, 4, 5, 6]"],
-//     )
-// }
+#[test]
+fn test_late_binding() {
+    check_output_default(
+        r#"
+دالة أ() {
+    ب()؛
+}
 
-// #[test]
-// fn test_len() {
-//     check_output_lists(
-//         r#"
-// print(len(""));
-// print(len("cat"));
-// print(len([]));
-// print(len([1,2,3,4]));
-// "#,
-//         &vec_of_strings!["0", "3", "0", "4"],
-//     )
-// }
+دالة ب() {
+    اطبع "مرحباً يا عالم"؛
+}
 
-// #[test]
-// fn test_for_each() {
-//     check_output_lists(
-//         r#"
-// fun f(arg) { print arg; }
-// forEach([1,2,3,4], f);
-// "#,
-//         &vec_of_strings!["1", "2", "3", "4"],
-//     )
-// }
-
-// #[test]
-// fn test_map() {
-//     check_output_lists(
-//         r#"
-// fun f(arg) { return arg + 1; }
-// print(map(f, [1,2,3,4]));
-// "#,
-//         &vec_of_strings!["[2, 3, 4, 5]"],
-//     )
-// }
-
-// #[test]
-// fn test_list_subscript() {
-//     check_output_lists(
-//         r#"
-// var xs = [0,1];
-// print(xs[0]);
-// print(xs[1]);
-// print(xs[-1]);
-// print(xs[-2]);
-// "#,
-//         &vec_of_strings!["0", "1", "1", "0"],
-//     )
-// }
-
-// #[test]
-// fn test_list_setitem_1() {
-//     check_output_lists(
-//         r#"
-// var xs = [0,1];
-// xs[-1] = 42;
-// print(xs);
-// "#,
-//         &vec_of_strings!["[0, 42]"],
-//     )
-// }
-
-// #[test]
-// fn test_list_setitem_2() {
-//     check_output_lists(
-//         r#"
-// var xs = [[0,1]];
-// xs[0][1] = 42;
-// print(xs);
-// "#,
-//         &vec_of_strings!["[[0, 42]]"],
-//     )
-// }
-
-// #[test]
-// fn test_list_setitem_3() {
-//     check_output_lists(
-//         r#"
-// class Foo {}
-// var foo = Foo();
-// foo.attr = [0];
-// foo.attr[0] = 1337;
-// print foo.attr;
-// "#,
-//         &vec_of_strings!["[1337]"],
-//     )
-// }
+أ()؛
+"#,
+        &vec_of_strings!["مرحباً يا عالم"],
+    )
+}

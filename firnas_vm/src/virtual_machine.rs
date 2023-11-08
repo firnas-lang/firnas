@@ -904,10 +904,16 @@ impl VirtualMachine {
                 self.stack[stack_len - 1 - arg_count_usize] = new_instance;
 
                 {
+                    let init_name = if cfg!(feature = "en") {
+                        "init"
+                    } else {
+                        "تهيئة"
+                    };
+
                     let maybe_method_id = self
                         .get_class(class_id)
                         .methods
-                        .get(&"init".to_string())
+                        .get(&init_name.to_string())
                         .copied();
 
                     if let Some(method_id) = maybe_method_id {

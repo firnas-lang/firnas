@@ -7,9 +7,9 @@ edition = "2021"
 firnas_ext = { version = "*", path = "../firnas_ext" }
 firnas_bytecode = { version = "*", path = "../firnas_bytecode" }
 firnas_compiler = { version = "*", path = "../firnas_compiler", default-features = false }
-arabic_utils = { version = "*", path = "../arabic_utils" }
+arabic_utils = { version = "*", path = "../arabic_utils", optional = true }
 
 [features]
 default = ["en"]
 en = ["firnas_compiler/en"]
-ar = ["firnas_compiler/ar"]
+ar = ["firnas_compiler/ar", "dep:arabic_utils"]

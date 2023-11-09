@@ -1,0 +1,3 @@
+[alias]
+firnas_en = "run -p firnas_cli --"
+firnas_ar = "run -p firnas_cli --no-default-features --features ar --"

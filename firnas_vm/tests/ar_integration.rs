@@ -55,14 +55,22 @@ fn check_error_default(code: &str, f: &dyn Fn(&str) -> ()) {
 
 #[test]
 fn it_should_print_var_value() {
-    let code = "دع س = ٢؛ اطبع س؛";
-    check_output_default(code, &vec_of_strings!["2"]);
+    let code = r#"
+دع س = ٢؛
+اطبع_سطر(س)؛
+    "#;
+    check_output_default(code, &vec_of_strings!["٢"]);
 }
 
 #[test]
 fn it_should_print_var_value_in_scope() {
-    let code = "{ دع س = ٢؛ اطبع س؛ }";
-    check_output_default(code, &vec_of_strings!["2"]);
+    let code = r#"
+{
+    دع س = ٢؛
+    اطبع_سطر(س)؛
+}
+        "#;
+    check_output_default(code, &vec_of_strings!["٢"]);
 }
 
 #[test]
@@ -84,10 +92,10 @@ fn it_should_print_var_value_after_mutation_in_scope() {
 {
     دع س = ٢؛
     دع ص = ٣؛
-    اطبع س * ص + ٤؛
+    اطبع_سطر(س * ص + ٤)؛
 }
 "#,
-        &vec_of_strings!["10"],
+        &vec_of_strings!["١٠"],
     );
 }
 

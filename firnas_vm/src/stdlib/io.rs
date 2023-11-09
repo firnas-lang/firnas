@@ -3,6 +3,18 @@ use crate::value;
 use crate::value::NativeFunction;
 use crate::virtual_machine;
 
+pub trait StdIO {
+    fn print(&self, content: &str);
+}
+
+pub struct DefaultStdIO;
+
+impl StdIO for DefaultStdIO {
+    fn print(&self, content: &str) {
+        println!("{content}");
+    }
+}
+
 pub fn std_io_print_line() -> StdFunc {
     let name = if cfg!(feature = "ar") {
         String::from("اطبع_سطر")
@@ -46,22 +58,22 @@ fn print_line(
         value::Value::String(idx) => {
             let output = vm.heap.get_str(idx).clone();
             vm.push_output(output.clone());
-            println!("{output}");
+            vm.std_io.print(&output);
         }
         value::Value::Number(num) => {
             let output: String = make_number(num);
             vm.push_output(output.clone());
-            println!("{output}");
+            vm.std_io.print(&output);
         }
         value::Value::Bool(b) => {
             let output = make_bool(b);
             vm.push_output(output.clone());
-            println!("{output}");
+            vm.std_io.print(&output);
         }
         value::Value::Nil => {
             let output = make_nil();
             vm.push_output(output.clone());
-            println!("{output}");
+            vm.std_io.print(&output);
         }
         value::Value::Function(_) => todo!(),
         value::Value::Instance(_) => todo!(),

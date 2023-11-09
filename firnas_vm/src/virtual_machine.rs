@@ -2,6 +2,8 @@ use crate::gc;
 use crate::stdlib;
 use crate::stdlib::io::std_io_print;
 use crate::stdlib::io::std_io_print_line;
+use crate::stdlib::io::DefaultStdIO;
+use crate::stdlib::io::StdIO;
 use crate::stdlib::math::std_math_exp;
 use crate::stdlib::math::std_math_sqrt;
 use crate::stdlib::time::std_time_clock;
@@ -29,9 +31,34 @@ pub struct VirtualMachine {
     pub upvalues: Vec<Rc<RefCell<value::Upvalue>>>,
     pub heap: gc::Heap,
     gray_stack: Vec<gc::HeapId>,
+    pub std_io: Box<dyn StdIO>,
 }
 
 impl VirtualMachine {
+    pub fn new(std_io: Box<dyn StdIO>) -> Self {
+        let mut res = VirtualMachine {
+            frames: Default::default(),
+            stack: Default::default(),
+            output: Default::default(),
+            globals: Default::default(),
+            upvalues: Default::default(),
+            heap: Default::default(),
+            gray_stack: Default::default(),
+            std_io,
+        };
+        res.stack.reserve(256);
+        res.frames.reserve(64);
+
+        res.add_std_func(std_io_print());
+        res.add_std_func(std_io_print_line());
+
+        res.add_std_func(std_time_clock());
+
+        res.add_std_func(std_math_exp());
+        res.add_std_func(std_math_sqrt());
+        res
+    }
+
     pub fn get_output(&self) -> Vec<String> {
         self.output.clone()
     }
@@ -55,6 +82,7 @@ impl Default for VirtualMachine {
             upvalues: Default::default(),
             heap: Default::default(),
             gray_stack: Default::default(),
+            std_io: Box::new(DefaultStdIO),
         };
         res.stack.reserve(256);
         res.frames.reserve(64);

@@ -10,8 +10,7 @@
         import init, { compile } from './pkg/wasm_bindings.js';
 
         init().then(() => {
-            console.log("Hello world");
-            console.log(compile("lakjsd 1;"));
+            console.log(compile("printLine(exp(2));"));
         });
     </script>
 </body>

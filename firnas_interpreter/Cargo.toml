@@ -5,4 +5,9 @@ edition = "2021"
 
 [dependencies]
 firnas_ext = { version = "*", path = "../firnas_ext" }
-firnas_tokenizer = { version = "*", path = "../firnas_tokenizer" }
+firnas_tokenizer = { version = "*", path = "../firnas_tokenizer", default-features = false }
+
+[features]
+default = ["en"]
+en = ["firnas_tokenizer/en"]
+ar = ["firnas_tokenizer/ar"]

@@ -33,6 +33,9 @@ impl ArabicChar for char {
         if self.is_ascii_digit() {
             return char::from_u32((self as u32) - ('0' as u32) + ('\u{0660}' as u32));
         }
+        if self == '.' {
+            return Some('\u{066B}');
+        }
         None
     }
 }

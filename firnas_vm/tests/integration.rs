@@ -410,7 +410,7 @@ fun f() {
     return;
 }
 
-print f();
+printLine(f());
 "#,
         &vec_of_strings!["nil"],
     )

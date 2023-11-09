@@ -1,5 +1,3 @@
-use arabic_utils::arabic_number::ArabicNumber;
-
 use super::StdFunc;
 use crate::value;
 use crate::value::NativeFunction;
@@ -103,9 +101,13 @@ fn print(
 }
 
 fn make_number(num: f64) -> String {
-    if cfg!(feature = "ar") {
+    #[cfg(feature = "ar")]
+    {
+        use arabic_utils::arabic_number::ArabicNumber;
         num.to_arabic_decimal().unwrap()
-    } else {
+    }
+    #[cfg(not(feature = "ar"))]
+    {
         format!("{num}")
     }
 }

@@ -41,13 +41,6 @@ pub enum Client {
 }
 
 impl Client {
-    pub fn execute(&self) -> anyhow::Result<()> {
-        match self {
-            Self::Repl { extentions } => Client::handle_repl(extentions),
-            Self::Compile { path, extentions } => Client::handle_file(path.to_string(), extentions),
-        }
-    }
-
     fn handle_repl(extentions: &[Extension]) -> anyhow::Result<()> {
         println!("==== Fernas repl ====");
         let extensions = firnas_ext::Extensions {
@@ -87,5 +80,8 @@ impl Client {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    cli.command.execute()
+    match cli.command {
+        Client::Repl { extentions } => Client::handle_repl(&extentions),
+        Client::Compile { path, extentions } => Client::handle_file(path.to_string(), &extentions),
+    }
 }

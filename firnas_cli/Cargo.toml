@@ -7,8 +7,13 @@ edition = "2021"
 anyhow = "1.0.75"
 text_io = "0.1.12"
 clap = { version = "4.4.7", features = ["derive"] }
-firnas_vm = { version = "*", path = "../firnas_vm" }
+firnas_vm = { version = "*", path = "../firnas_vm", default-features = false }
 firnas_ext = { version = "*", path = "../firnas_ext" }
-firnas_compiler = { version = "*", path = "../firnas_compiler" }
-firnas_tokenizer = { version = "*", path = "../firnas_tokenizer" }
-firnas_interpreter = { version = "*", path = "../firnas_interpreter" }
+firnas_compiler = { version = "*", path = "../firnas_compiler", default-features = false }
+firnas_tokenizer = { version = "*", path = "../firnas_tokenizer", default-features = false }
+firnas_interpreter = { version = "*", path = "../firnas_interpreter", default-features = false }
+
+[features]
+default = ["en"]
+en = ["firnas_vm/en", "firnas_compiler/en", "firnas_tokenizer/en"]
+ar = ["firnas_vm/ar", "firnas_compiler/ar", "firnas_tokenizer/ar"]

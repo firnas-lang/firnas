@@ -36,6 +36,10 @@ impl VirtualMachine {
         self.output.clone()
     }
 
+    pub fn push_output(&mut self, output: String) {
+        self.output.push(output);
+    }
+
     fn add_std_func(&mut self, std_func: StdFunc) {
         self.globals.insert(std_func.name, std_func.func);
     }
@@ -57,7 +61,9 @@ impl Default for VirtualMachine {
 
         res.add_std_func(std_io_print());
         res.add_std_func(std_io_print_line());
+
         res.add_std_func(std_time_clock());
+
         res.add_std_func(std_math_exp());
         res.add_std_func(std_math_sqrt());
 

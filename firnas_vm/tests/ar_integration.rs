@@ -71,9 +71,9 @@ fn it_should_print_var_value_after_mutation() {
         r#"
 دع س = ٢؛
 دع ص = ٣؛
-اطبع س * ص + ٤؛
+اطبع_سطر(س * ص + ٤)؛
 "#,
-        &vec_of_strings!["10"],
+        &vec_of_strings!["١٠"],
     );
 }
 
@@ -405,10 +405,10 @@ fn test_functions_4() {
 دالة د() {
     رد؛
 }
-
-اطبع د()؛
+دع س = د()؛
+اطبع_سطر(س)؛
 "#,
-        &vec_of_strings!["nil"],
+        &vec_of_strings!["عدم"],
     )
 }
 

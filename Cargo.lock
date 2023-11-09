@@ -157,6 +157,7 @@ dependencies = [
 name = "firnas_vm"
 version = "0.1.0"
 dependencies = [
+ "arabic_utils",
  "firnas_bytecode",
  "firnas_compiler",
  "firnas_ext",

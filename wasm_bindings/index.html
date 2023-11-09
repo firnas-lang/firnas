@@ -10,7 +10,14 @@
         import init, { compile } from './pkg/wasm_bindings.js';
 
         init().then(() => {
-            console.log(compile("printLine(exp(2));"));
+            let code = `
+            fun fibo(n) {
+                if (n < 2) return n;
+                return fibo(n - 2) + fibo(n - 1);
+            }
+            printLine(fibo(11));
+            `;
+            console.log(compile(code));
         });
     </script>
 </body>

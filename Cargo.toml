@@ -9,5 +9,4 @@ members = [
     "firnas_interpreter",
     "firnas_tokenizer",
     "firnas_vm",
-    "wasm_bindings",
 ]

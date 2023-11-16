@@ -470,10 +470,6 @@ impl VirtualMachine {
 
                     }
             }
-            (firnas_bytecode::Op::Print, _) => {
-                let to_print = self.peek().clone();
-                self.print_val(&to_print);
-            }
             (firnas_bytecode::Op::Pop, _) => {
                 self.pop_stack();
             }

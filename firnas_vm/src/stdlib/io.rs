@@ -5,12 +5,17 @@ use crate::virtual_machine;
 
 pub trait StdIO {
     fn print(&self, content: &str);
+    fn println(&self, content: &str);
 }
 
 pub struct DefaultStdIO;
 
 impl StdIO for DefaultStdIO {
     fn print(&self, content: &str) {
+        print!("{content}");
+    }
+
+    fn println(&self, content: &str) {
         println!("{content}");
     }
 }
@@ -58,22 +63,22 @@ fn print_line(
         value::Value::String(idx) => {
             let output = vm.heap.get_str(idx).clone();
             vm.push_output(output.clone());
-            vm.std_io.print(&output);
+            vm.std_io.println(&output);
         }
         value::Value::Number(num) => {
             let output: String = make_number(num);
             vm.push_output(output.clone());
-            vm.std_io.print(&output);
+            vm.std_io.println(&output);
         }
         value::Value::Bool(b) => {
             let output = make_bool(b);
             vm.push_output(output.clone());
-            vm.std_io.print(&output);
+            vm.std_io.println(&output);
         }
         value::Value::Nil => {
             let output = make_nil();
             vm.push_output(output.clone());
-            vm.std_io.print(&output);
+            vm.std_io.println(&output);
         }
         value::Value::Function(_) => todo!(),
         value::Value::Instance(_) => todo!(),
@@ -91,16 +96,24 @@ fn print(
 ) -> Result<value::Value, String> {
     match args[0] {
         value::Value::String(idx) => {
-            print!("{}", vm.heap.get_str(idx))
+            let output = vm.heap.get_str(idx).clone();
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
         }
         value::Value::Number(num) => {
-            print!("{}", make_number(num))
+            let output: String = make_number(num);
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
         }
         value::Value::Bool(b) => {
-            print!("{}", make_bool(b))
+            let output = make_bool(b);
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
         }
         value::Value::Nil => {
-            print!("{}", make_nil())
+            let output = make_nil();
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
         }
         value::Value::Function(_) => todo!(),
         value::Value::Instance(_) => todo!(),

@@ -742,7 +742,7 @@ impl Compiler {
     fn print_statement(&mut self) -> Result<(), Error> {
         self.expression()?;
         self.consume(token::TokenType::Semicolon, "Expected ';' after value.")?;
-        self.emit_op(firnas_bytecode::Op::Print, self.previous().clone().line);
+        // self.emit_op(firnas_bytecode::Op::Print, self.previous().clone().line);
         Ok(())
     }
 

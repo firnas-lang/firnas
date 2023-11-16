@@ -35,7 +35,6 @@ pub enum Op {
     Equal,
     Greater,
     Less,
-    Print,
     Pop,
     DefineGlobal(usize),
     GetGlobal(usize),
@@ -172,7 +171,6 @@ pub fn disassemble_code(chunk: &Chunk) -> Vec<String> {
             Op::Equal => "OP_NOT".to_string(),
             Op::Greater => "OP_GREATER".to_string(),
             Op::Less => "OP_LESS".to_string(),
-            Op::Print => "OP_PRINT".to_string(),
             Op::Pop => "OP_POP".to_string(),
             Op::DefineGlobal(global_idx) => format!(
                 "OP_DEFINE_GLOBAL {:?} (idx={})",

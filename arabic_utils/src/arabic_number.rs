@@ -6,6 +6,10 @@ pub trait ArabicNumber {
 
 impl ArabicNumber for f64 {
     fn to_arabic_decimal(&self) -> Option<String> {
+        if self == &f64::INFINITY {
+            return Some(String::from("لانهاية"));
+        }
+
         let num = format!("{self}")
             .chars()
             .map(|c| c.ectoac().unwrap())

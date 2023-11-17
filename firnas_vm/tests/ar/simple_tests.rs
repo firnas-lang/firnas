@@ -49,8 +49,8 @@ fn it_should_print_var_value_after_mutation_in_scope() {
 
 #[test]
 fn it_should_return_inf_when_dividing_by_zero() {
-    let code = r"اطبع ٢ \ ٠؛";
-    check_output_default(code, &vec_of_strings!["inf"]);
+    let code = r"اطبع_سطر(٢ \ ٠)؛";
+    check_output_default(code, &vec_of_strings!["لانهاية"]);
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn it_should_set_items_global() {
 دع فطور = "تمر"؛
 دع مشروب = "لبن"؛
 فطور = فطور + " مع " + مشروب؛
-اطبع فطور؛
+اطبع_سطر(فطور)؛
 "#,
         &vec_of_strings!["تمر مع لبن"],
     );
@@ -74,7 +74,7 @@ fn it_should_set_items_in_scope() {
     دع فطور = "تمر"؛
     دع مشروب = "لبن"؛
     فطور = "تمر مع لبن"؛
-    اطبع فطور؛
+    اطبع_سطر(فطور)؛
 }
 "#,
         &vec_of_strings!["تمر مع لبن"],
@@ -103,11 +103,11 @@ fn test_print_locals() {
 {
     دع س = ٠؛
     دع ص = ١؛
-    اطبع س؛
-    اطبع ص؛
+    اطبع_سطر(س)؛
+    اطبع_سطر(ص)؛
 }
 "#,
-        &vec_of_strings!["0", "1"],
+        &vec_of_strings!["٠", "١"],
     );
 }
 
@@ -117,9 +117,9 @@ fn test_print_globals() {
         r#"
 دع س = ٠؛
 دع ص = ١؛
-اطبع س؛
-اطبع ص؛
+اطبع_سطر(س)؛
+اطبع_سطر(ص)؛
 "#,
-        &vec_of_strings!["0", "1"],
+        &vec_of_strings!["٠", "١"],
     );
 }

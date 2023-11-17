@@ -59,19 +59,19 @@ fn print_line(
     vm: &mut virtual_machine::VirtualMachine,
     args: &[value::Value],
 ) -> Result<value::Value, String> {
-    match args[0] {
-        value::Value::String(idx) => {
-            let output = vm.heap.get_str(idx).clone();
+    match &args[0] {
+        value::Value::String(id) => {
+            let output = vm.heap.get_str(*id).clone();
             vm.push_output(output.clone());
             vm.std_io.println(&output);
         }
         value::Value::Number(num) => {
-            let output: String = make_number(num);
+            let output: String = make_number(*num);
             vm.push_output(output.clone());
             vm.std_io.println(&output);
         }
         value::Value::Bool(b) => {
-            let output = make_bool(b);
+            let output = make_bool(*b);
             vm.push_output(output.clone());
             vm.std_io.println(&output);
         }
@@ -80,11 +80,36 @@ fn print_line(
             vm.push_output(output.clone());
             vm.std_io.println(&output);
         }
-        value::Value::Function(_) => todo!(),
-        value::Value::Instance(_) => todo!(),
-        value::Value::BoundMethod(_) => todo!(),
-        value::Value::Class(_) => todo!(),
-        value::Value::NativeFunction(_) => todo!(),
+        value::Value::Function(id) => {
+            let output = format!("<fn '{}'>", vm.heap.get_closure(*id).clone().function.name);
+            vm.push_output(output.clone());
+            vm.std_io.println(&output);
+        }
+        value::Value::Instance(id) => {
+            let instance = vm.heap.get_instance(*id);
+            let class_name = &vm.heap.get_class(instance.class_id).name;
+            let output = format!("<{} instance>", class_name);
+            vm.push_output(output.clone());
+            vm.std_io.println(&output);
+        }
+        value::Value::BoundMethod(id) => {
+            let bound_method = vm.heap.get_bound_method(*id);
+            let instance = vm.heap.get_instance(bound_method.instance_id);
+            let class_name = &vm.heap.get_class(instance.class_id).name;
+            let output = format!("<bound method of {} instance>", class_name);
+            vm.push_output(output.clone());
+            vm.std_io.println(&output);
+        }
+        value::Value::Class(id) => {
+            let output = format!("<class '{}'>", vm.heap.get_class(*id).name);
+            vm.push_output(output.clone());
+            vm.std_io.println(&output);
+        }
+        value::Value::NativeFunction(func) => {
+            let output = format!("<native fn {}>", func.name);
+            vm.push_output(output.clone());
+            vm.std_io.println(&output);
+        }
         value::Value::List(_) => todo!(),
     };
     Ok(value::Value::Nil)
@@ -94,19 +119,19 @@ fn print(
     vm: &mut virtual_machine::VirtualMachine,
     args: &[value::Value],
 ) -> Result<value::Value, String> {
-    match args[0] {
-        value::Value::String(idx) => {
-            let output = vm.heap.get_str(idx).clone();
+    match &args[0] {
+        value::Value::String(id) => {
+            let output = vm.heap.get_str(*id).clone();
             vm.push_output(output.clone());
             vm.std_io.print(&output);
         }
         value::Value::Number(num) => {
-            let output: String = make_number(num);
+            let output: String = make_number(*num);
             vm.push_output(output.clone());
             vm.std_io.print(&output);
         }
         value::Value::Bool(b) => {
-            let output = make_bool(b);
+            let output = make_bool(*b);
             vm.push_output(output.clone());
             vm.std_io.print(&output);
         }
@@ -115,11 +140,36 @@ fn print(
             vm.push_output(output.clone());
             vm.std_io.print(&output);
         }
-        value::Value::Function(_) => todo!(),
-        value::Value::Instance(_) => todo!(),
-        value::Value::BoundMethod(_) => todo!(),
-        value::Value::Class(_) => todo!(),
-        value::Value::NativeFunction(_) => todo!(),
+        value::Value::Function(id) => {
+            let output = format!("<fn '{}'>", vm.heap.get_closure(*id).clone().function.name);
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
+        }
+        value::Value::Instance(id) => {
+            let instance = vm.heap.get_instance(*id);
+            let class_name = &vm.heap.get_class(instance.class_id).name;
+            let output = format!("<{} instance>", class_name);
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
+        }
+        value::Value::BoundMethod(id) => {
+            let bound_method = vm.heap.get_bound_method(*id);
+            let instance = vm.heap.get_instance(bound_method.instance_id);
+            let class_name = &vm.heap.get_class(instance.class_id).name;
+            let output = format!("<bound method of {} instance>", class_name);
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
+        }
+        value::Value::Class(id) => {
+            let output = format!("<class '{}'>", vm.heap.get_class(*id).name);
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
+        }
+        value::Value::NativeFunction(func) => {
+            let output = format!("<native fn {}>", func.name);
+            vm.push_output(output.clone());
+            vm.std_io.print(&output);
+        }
         value::Value::List(_) => todo!(),
     };
     Ok(value::Value::Nil)

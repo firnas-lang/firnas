@@ -10,7 +10,7 @@ fun areWeHavingItYet() {
     print "Yes we are!";
 }
 
-print areWeHavingItYet;
+printLine(areWeHavingItYet);
 "#,
         &vec_of_strings!["<fn 'areWeHavingItYet'>"],
     )
@@ -21,10 +21,10 @@ fn test_functions_2() {
     check_output_default(
         r#"
 fun f(x, y) {
-    print x + y;
+    printLine(x + y);
 }
 
-print f;
+printLine(f);
 "#,
         &vec_of_strings!["<fn 'f'>"],
     )
@@ -38,7 +38,7 @@ fun f(x, y) {
     return x + y;
 }
 
-print f;
+printLine(f);
 "#,
         &vec_of_strings!["<fn 'f'>"],
     )
@@ -73,8 +73,8 @@ fn test_functions_6() {
 fun f(x, y) {
     return x + y;
 }
-
-print f(1,2);
+var x = f(1,2);
+printLine(x);
 "#,
         &vec_of_strings!["3"],
     );
@@ -92,7 +92,8 @@ fun f(x, y) {
     return g(x) + y;
 }
 
-print f(1,2);
+var x = f(1, 2);
+printLine(x);
 "#,
         &vec_of_strings!["4"],
     );
@@ -104,11 +105,11 @@ fn test_functions_8() {
         r#"
 var x = 2;
 fun f(x) {
-    print 2 * x;
+    printLine(2 * x);
 }
 
 f(x);
-print x;
+printLine(x);
 "#,
         &vec_of_strings!["4", "2"],
     );
@@ -130,7 +131,7 @@ fun fact(n) {
     return n * fact(n - 1);
 }
 
-print fact(10);
+printLine(fact(10));
 "#,
         &vec_of_strings![format!("{}", fact(10))],
     );
@@ -150,7 +151,7 @@ fun isOdd(n) {
     return isEven(n - 1);
 }
 
-print isEven(10);
+printLine(isEven(10));
 "#,
         &vec_of_strings!["true"],
     );
@@ -166,9 +167,9 @@ fun fib(n) {
 }
 
 var start = clock();
-print fib(5);
-print clock() - start;
-print 42;
+printLine(fib(5));
+printLine(clock() - start);
+printLine(42);
 "#,
         firnas_ext::Extensions::default(),
     );
@@ -192,7 +193,7 @@ fn test_get_upval_on_stack() {
 fun outer() {
     var x = "outside";
     fun inner() {
-        print x;
+        printLine(x);
     }
     inner();
 }
@@ -212,7 +213,7 @@ fun outer() {
         x = "assigned";
     }
     inner();
-    print x;
+    printLine(x);
 }
 outer();
 "#,
@@ -227,7 +228,7 @@ fn test_closing_upvals_after_return() {
 fun outer() {
     var x = "outside";
     fun inner() {
-        print x;
+        printLine(x);
     }
 
     return inner;
@@ -248,7 +249,7 @@ var closure;
 {
     var x = "outside";
     fun inner() {
-        print x;
+        printLine(x);
     }
 
     closure = inner;
@@ -265,7 +266,7 @@ fn test_late_binding() {
     check_output_default(
         r#"
 fun a() { b(); }
-fun b() { print "hello world"; }
+fun b() { printLine("hello world"); }
 
 a();
 "#,

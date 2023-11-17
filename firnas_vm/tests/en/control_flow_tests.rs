@@ -7,10 +7,10 @@ fn test_if_stmt() {
 var x = 0;
 var y = 1;
 if (x) {
-    print x;
+    printLine(x);
 }
 if (y) {
-    print y;
+    printLine(y);
 }
 "#,
         &vec_of_strings!["1"],
@@ -23,9 +23,9 @@ fn test_if_then_else_1() {
         r#"
 var x = 0;
 if (x) {
-    print "hello";
+    printLine("hello");
 } else {
-    print "goodbye";
+    printLine("goodbye");
 }
 "#,
         &vec_of_strings!["goodbye"],
@@ -38,9 +38,9 @@ fn test_if_then_else_2() {
         r#"
 var x = 1;
 if (x) {
-    print "hello";
+    printLine("hello");
 } else {
-    print "goodbye";
+    printLine("goodbye");
 }
 "#,
         &vec_of_strings!["hello"],
@@ -54,9 +54,9 @@ fn test_and_1() {
 var x = false;
 var y = true;
 if (y and x) {
-    print "cat";
+    printLine("cat");
 } else {
-    print "dog";
+    printLine("dog");
 }
 "#,
         &vec_of_strings!["dog"],
@@ -70,9 +70,9 @@ fn test_and_2() {
 var x = false;
 var y = true;
 if (x and y) {
-    print "cat";
+    printLine("cat");
 } else {
-print "dog";
+    printLine("dog");
 }
 "#,
         &vec_of_strings!["dog"],
@@ -86,9 +86,9 @@ fn test_and_3() {
 var x = true;
 var y = true;
 if (y and x) {
-    print "cat";
+    printLine("cat");
 } else {
-    print "dog";
+    printLine("dog");
 }
 "#,
         &vec_of_strings!["cat"],
@@ -102,9 +102,9 @@ fn test_or_1() {
 var x = false;
 var y = true;
 if (y or x) {
-    print "cat";
+    printLine("cat");
 } else {
-    print "dog";
+    printLine("dog");
 }
 "#,
         &vec_of_strings!["cat"],
@@ -118,9 +118,9 @@ fn test_or_2() {
 var x = false;
 var y = true;
 if (x or y) {
-    print "cat";
+    printLine("cat");
 } else {
-    print "dog";
+    printLine("dog");
 }
 "#,
         &vec_of_strings!["cat"],
@@ -134,9 +134,9 @@ fn test_or_3() {
 var x = false;
 var y = false;
 if (y or x) {
-    print "cat";
+    printLine("cat");
 } else {
-    print "dog";
+    printLine("dog");
 }
 "#,
         &vec_of_strings!["dog"],
@@ -154,7 +154,7 @@ fn test_while() {
         x = x + 1;
         sum = sum + x;
     }
-    print sum;
+    printLine(sum);
 }
 "#,
         &vec_of_strings!["5050"],
@@ -177,7 +177,7 @@ fn test_for() {
     for (var i = 1; i <= 10; i = i + 1) {
         fact = fact * i;
     }
-    print fact;
+    printLine(fact);
 }
 "#,
         &vec_of_strings![format!("{}", fact(10))],

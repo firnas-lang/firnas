@@ -6,7 +6,7 @@ fn test_classes_1() {
     check_output_default(
         r#"
 class Brioche {}
-print Brioche;
+printLine(Brioche);
 "#,
         &vec_of_strings!["<class 'Brioche'>"],
     );
@@ -18,7 +18,7 @@ fn test_classes_instances_1() {
         r#"
 class Brioche {}
 var instance = Brioche();
-print instance;
+printLine(instance);
 "#,
         &vec_of_strings!["<Brioche instance>"],
     );
@@ -31,7 +31,7 @@ fn test_setattr_1() {
 class Foo {}
 var foo = Foo();
 foo.attr = 42;
-print foo.attr;
+printLine(foo.attr);
 "#,
         &vec_of_strings!["42"],
     );
@@ -43,7 +43,8 @@ fn test_setattr_2() {
         r#"
 class Toast {}
 var toast = Toast();
-print toast.jam = "grape";
+toast.jam = "grape";
+printLine(toast.jam);
 "#,
         &vec_of_strings!["grape"],
     );
@@ -57,7 +58,7 @@ class Pair {}
 var pair = Pair();
 pair.first = 1;
 pair.second = 2;
-print pair.first + pair.second;
+printLine(pair.first + pair.second);
 "#,
         &vec_of_strings!["3"],
     );
@@ -74,7 +75,7 @@ class Foo {
 }
 
 var foo = Foo();
-print foo.bar;
+print(foo.bar);
 "#,
         &vec_of_strings!["<bound method of Foo instance>"],
     );

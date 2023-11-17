@@ -1,5 +1,3 @@
-use std::f32::NAN;
-
 use crate::arabic_char::ArabicChar;
 
 pub trait ArabicNumber {

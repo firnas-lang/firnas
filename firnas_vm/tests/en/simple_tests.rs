@@ -2,12 +2,12 @@ use crate::common::{check_error_default, check_output_default};
 
 #[test]
 fn it_should_print_var_value() {
-    check_output_default("var x = 2; print x;", &vec_of_strings!["2"]);
+    check_output_default("var x = 2; printLine(x);", &vec_of_strings!["2"]);
 }
 
 #[test]
 fn it_should_print_var_value_in_scope() {
-    check_output_default("{var x = 2; print x;}", &vec_of_strings!["2"]);
+    check_output_default("{var x = 2; printLine(x);}", &vec_of_strings!["2"]);
 }
 
 #[test]
@@ -16,7 +16,7 @@ fn it_should_print_var_value_after_mutation() {
         r#"
 var x = 2;
 var y = 3;
-print x * y + 4;
+printLine(x * y + 4);
 "#,
         &vec_of_strings!["10"],
     );
@@ -29,7 +29,7 @@ fn it_should_print_var_value_after_mutation_in_scope() {
 {
     var x = 2;
     var y = 3;
-    print x * y + 4;
+    printLine(x * y + 4);
 }
 "#,
         &vec_of_strings!["10"],
@@ -38,7 +38,7 @@ fn it_should_print_var_value_after_mutation_in_scope() {
 
 #[test]
 fn it_should_return_inf_when_dividing_by_zero() {
-    check_output_default("print 1 / 0;", &vec_of_strings!["inf"]);
+    check_output_default("printLine(1 / 0);", &vec_of_strings!["inf"]);
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn it_should_set_items_global() {
 var breakfast = "beignets";
 var beverage = "cafe au lait";
 breakfast = "beignets with " + beverage;
-print breakfast;
+printLine(breakfast);
 "#,
         &vec_of_strings!["beignets with cafe au lait"],
     );
@@ -62,7 +62,7 @@ fn it_should_set_items_in_scope() {
     var breakfast = "beignets";
     var beverage = "cafe au lait";
     breakfast = "beignets with " + beverage;
-    print breakfast;
+    printLine(breakfast);
 }
 "#,
         &vec_of_strings!["beignets with cafe au lait"],
@@ -91,8 +91,8 @@ fn test_print_locals() {
 {
     var x = 0;
     var y = 1;
-    print x;
-    print y;
+    printLine(x);
+    printLine(y);
 }
 "#,
         &vec_of_strings!["0", "1"],
@@ -105,8 +105,8 @@ fn test_print_globals() {
         r#"
 var x = 0;
 var y = 1;
-print x;
-print y;
+printLine(x);
+printLine(y);
 "#,
         &vec_of_strings!["0", "1"],
     );

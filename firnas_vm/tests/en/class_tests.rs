@@ -75,7 +75,7 @@ class Foo {
 }
 
 var foo = Foo();
-print(foo.bar);
+printLine(foo.bar);
 "#,
         &vec_of_strings!["<bound method of Foo instance>"],
     );
@@ -87,7 +87,7 @@ fn test_calling_bound_methods_no_this() {
         r#"
 class Scone {
     topping(first, second) {
-        print "scone with " + first + " and " + second;
+        printLine("scone with " + first + " and " + second);
     }
 }
 
@@ -104,7 +104,7 @@ fn test_calling_bound_methods_with_this_1() {
         r#"
 class Nested {
     method() {
-        print this;
+        printLine(this);
     }
 }
 
@@ -121,7 +121,7 @@ fn test_calling_bound_methods_with_this_2() {
 class Nested {
     method() {
         fun function() {
-            print this;
+            printLine(this);
         }
 
         function();
@@ -142,7 +142,8 @@ class Brunch {
     bacon() {}
     eggs() {}
 }
-print Brunch().bacon();
+var x = Brunch().bacon();
+printLine(x);
 "#,
         &vec_of_strings!["nil"],
     );
@@ -153,10 +154,10 @@ fn test_init_1() {
     check_output_default(
         r#"
 class Brunch {
-    init(x) {this.x = x;}
-    eggs(y) {return this.x + y;}
+    init(x) { this.x = x; }
+    eggs(y) { return this.x + y; }
 }
-print Brunch(2).eggs(3);
+printLine(Brunch(2).eggs(3));
 "#,
         &vec_of_strings!["5"],
     );
@@ -169,7 +170,7 @@ fn test_invoking_fields() {
 class Oops {
     init() {
         fun f() {
-            print "not a method";
+            printLine("not a method");
         }
 
         this.field = f;
@@ -194,7 +195,8 @@ class A {
 }
 class B < A {}
 var b = B();
-print b.f();
+var x = b.f();
+printLine(x);
 "#,
         &vec_of_strings!["cat"],
     );
@@ -212,7 +214,8 @@ class A {
 class B < A {}
 class C < B {}
 var c = C();
-print c.f();
+var x = c.f();
+printLine(x);
 "#,
         &vec_of_strings!["cat"],
     );
@@ -234,7 +237,8 @@ class B < A {
 }
 
 var b = B(42);
-print b.f();
+var x = b.f();
+printLine(x);
 "#,
         &vec_of_strings!["42"],
     );
@@ -253,7 +257,8 @@ class B < A {
 }
 var b = B();
 b.attr = 42;
-print b.f();
+var x = b.f();
+printLine(x);
 "#,
         &vec_of_strings!["42"],
     );
@@ -276,13 +281,13 @@ fn test_super_1() {
         r#"
 class A {
     method() {
-        print "A method";
+        printLine("A method");
     }
 }
 
 class B < A {
     method() {
-        print "B method";
+        printLine("B method");
     }
 
     test() {
@@ -304,13 +309,13 @@ fn test_super_2() {
         r#"
 class A {
     method() {
-        print "A method";
+        printLine("A method");
     }
 }
 
 class B < A {
     method() {
-        print "B method";
+        printLine("B method");
     }
 
     test() {
@@ -333,12 +338,12 @@ fn test_super_3() {
         r#"
 class Doughnut {
     cook() {
-        print "Dunk in the fryer.";
+        printLine("Dunk in the fryer.");
         this.finish("sprinkles");
     }
 
     finish(ingredient) {
-        print "Finish with " + ingredient;
+        printLine("Finish with " + ingredient);
     }
 }
 

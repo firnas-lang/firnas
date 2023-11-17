@@ -118,8 +118,6 @@ dependencies = [
  "clap",
  "firnas_compiler",
  "firnas_ext",
- "firnas_interpreter",
- "firnas_tokenizer",
  "firnas_vm",
  "text_io",
 ]
@@ -136,14 +134,6 @@ dependencies = [
 [[package]]
 name = "firnas_ext"
 version = "0.1.0"
-
-[[package]]
-name = "firnas_interpreter"
-version = "0.1.0"
-dependencies = [
- "firnas_ext",
- "firnas_tokenizer",
-]
 
 [[package]]
 name = "firnas_tokenizer"

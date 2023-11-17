@@ -7,7 +7,7 @@ fn test_functions_1() {
     check_output_default(
         r#"
 fun areWeHavingItYet() {
-    print "Yes we are!";
+    printLine("Yes we are!");
 }
 
 printLine(areWeHavingItYet);

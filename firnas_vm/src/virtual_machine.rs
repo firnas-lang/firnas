@@ -1055,12 +1055,6 @@ impl VirtualMachine {
         }
     }
 
-    fn print_val(&mut self, val: &value::Value) {
-        let output = self.format_val(val);
-        println!("{}", output);
-        self.output.push(output);
-    }
-
     fn values_equal(&self, val1: &value::Value, val2: &value::Value) -> bool {
         match (val1, val2) {
             (value::Value::Number(n1), value::Value::Number(n2)) => (n1 - n2).abs() < f64::EPSILON,

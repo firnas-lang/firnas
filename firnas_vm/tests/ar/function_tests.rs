@@ -1,13 +1,14 @@
 use crate::common::check_error_default;
 use crate::common::check_output_default;
 use crate::common::evaluate;
+use arabic_utils::arabic_number::ArabicNumber;
 
 #[test]
 fn test_functions_1() {
     check_output_default(
         r#"
 دالة هل_سنحصل_عليها() {
-    اطبع "اجل"؛
+    اطبع_سطر("اجل")؛
 }
 
 اطبع هل_سنحصل_عليها؛
@@ -22,7 +23,7 @@ fn test_functions_2() {
     check_output_default(
         r#"
 دالة د(س، ص) {
-    اطبع س + ص؛
+    اطبع_سطر(س + ص)؛
 }
 
 اطبع_سطر(د)؛
@@ -73,7 +74,8 @@ fn test_functions_6() {
 دالة د(س، ص) {
     رد س + ص؛
 }
-اطبع_سطر(د(١،٢))؛
+دع س = د(١،٢)؛
+اطبع_سطر(س)؛
 "#,
         &vec_of_strings!["٣"],
     );
@@ -91,7 +93,8 @@ fn test_functions_7() {
     رد ت(س) + ص؛
 }
 
-اطبع_سطر(د(١،٢))؛
+دع س = د(١،٢)؛
+اطبع_سطر(س)؛
 "#,
         &vec_of_strings!["٤"],
     );
@@ -129,10 +132,13 @@ fn test_functions_9() {
     لو (س<= ١) { رد ١؛ }
     رد س * مضروب(س − ١)؛
 }
-
-اطبع مضروب(١٠)؛
+دع س = مضروب(١٠)؛
+اطبع_سطر(س)؛
 "#,
-        &vec_of_strings![format!("{}", fact(10))],
+        &vec_of_strings![format!(
+            "{}",
+            (fact(10) as f64).to_arabic_decimal().unwrap()
+        )],
     );
 }
 
@@ -150,9 +156,9 @@ fn test_functions_10() {
     رد هل_الرقم_زوجي(س − ١)؛
 }
 
-اطبع هل_الرقم_زوجي(١٠)؛
+اطبع_سطر(هل_الرقم_زوجي(١٠))؛
 "#,
-        &vec_of_strings!["true"],
+        &vec_of_strings!["صحيح"],
     );
 }
 
@@ -166,9 +172,9 @@ fn test_native_functions() {
 }
 
 دع البداية = ساعة()؛
-اطبع فيبوناتشي(٥)؛
-اطبع ساعة() − البداية؛
-اطبع ٤٢؛
+اطبع_سطر(فيبوناتشي(٥))؛
+اطبع_سطر(ساعة() − البداية)؛
+اطبع_سطر(٤٢)؛
 "#,
         firnas_ext::Extensions::default(),
     );
@@ -176,8 +182,8 @@ fn test_native_functions() {
     match res {
         Ok(output) => {
             assert_eq!(output.len(), 3);
-            assert_eq!(output[0], "5");
-            assert_eq!(output[2], "42");
+            assert_eq!(output[0], "٥");
+            assert_eq!(output[2], "٤٢");
         }
         Err(err) => {
             panic!("{:?}", err);
@@ -193,6 +199,7 @@ fn test_get_upval_on_stack() {
     دع س = "في خارجي"؛
     دالة داخلي() {
         اطبع س؛
+        اطبع_سطر(س)؛
     }
     داخلي()؛
 }
@@ -212,7 +219,7 @@ fn test_set_upval_on_stack() {
         س = "مكلف"؛
     }
     داخلي()؛
-    اطبع س؛
+    اطبع_سطر(س)؛
 }
 خارجي()؛
 "#,
@@ -227,7 +234,7 @@ fn test_closing_upvals_after_return() {
 دالة خارجي() {
     دع س = "خارج"؛
     دالة دخلي() {
-        اطبع س؛
+        اطبع_سطر(س)؛
     }
     رد دخلي؛
 }
@@ -247,7 +254,7 @@ fn test_closing_upvals_after_scope() {
 {
     دع س = "خارج"؛
     دالة داخلي() {
-        اطبع س؛
+        اطبع_سطر(س)؛
     }
 
     مغلق = داخلي؛

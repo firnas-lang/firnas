@@ -225,7 +225,7 @@ fn it_should_tokenize_literals() {
 fn it_should_tokenize_keywords() {
     assert_eq!(
         tokenizer::scan_tokens(
-            "and class else false fun for if nil or print return super this true var while lambda"
+            "and class else false fun for if nil or return super this true var while lambda"
                 .to_owned()
         )
         .unwrap(),
@@ -289,13 +289,6 @@ fn it_should_tokenize_keywords() {
             Token {
                 ty: TokenType::Or,
                 lexeme: String::from("or"),
-                literal: None,
-                line: 1,
-                col: 1
-            },
-            Token {
-                ty: TokenType::Print,
-                lexeme: String::from("print"),
                 literal: None,
                 line: 1,
                 col: 1

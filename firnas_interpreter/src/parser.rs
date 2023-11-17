@@ -396,10 +396,6 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<expr::Stmt, Error> {
-        if self.matches(token::TokenType::Print) {
-            return self.print_statement();
-        }
-
         if self.matches(token::TokenType::While) {
             return self.while_statement();
         }
@@ -547,12 +543,6 @@ impl Parser {
         )?;
 
         Ok(stmts)
-    }
-
-    fn print_statement(&mut self) -> Result<expr::Stmt, Error> {
-        let expr = self.expression()?;
-        self.consume(token::TokenType::Semicolon, "Expected ; after value")?;
-        Ok(expr::Stmt::Print(expr))
     }
 
     fn expression_statement(&mut self) -> Result<expr::Stmt, Error> {

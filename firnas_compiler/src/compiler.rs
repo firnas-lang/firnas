@@ -502,9 +502,7 @@ impl Compiler {
     }
 
     fn statement(&mut self) -> Result<(), Error> {
-        if self.matches(token::TokenType::Print) {
-            self.print_statement()?;
-        } else if self.matches(token::TokenType::For) {
+        if self.matches(token::TokenType::For) {
             self.for_statement()?;
         } else if self.matches(token::TokenType::If) {
             self.if_statement()?;
@@ -736,13 +734,6 @@ impl Compiler {
         )?;
         let line = self.previous().line;
         self.emit_op(firnas_bytecode::Op::Pop, line);
-        Ok(())
-    }
-
-    fn print_statement(&mut self) -> Result<(), Error> {
-        self.expression()?;
-        self.consume(token::TokenType::Semicolon, "Expected ';' after value.")?;
-        // self.emit_op(firnas_bytecode::Op::Print, self.previous().clone().line);
         Ok(())
     }
 
@@ -1519,11 +1510,6 @@ impl Compiler {
                 prefix: None,
                 infix: Some(ParseFn::Or),
                 precedence: Precedence::Or,
-            },
-            token::TokenType::Print => ParseRule {
-                prefix: None,
-                infix: None,
-                precedence: Precedence::None,
             },
             token::TokenType::Return => ParseRule {
                 prefix: None,

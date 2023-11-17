@@ -49,7 +49,6 @@ impl Default for Scanner {
                 ("لو", TokenType::If),
                 ("عدم", TokenType::Nil),
                 ("او", TokenType::Or),
-                ("اطبع", TokenType::Print),
                 ("رد", TokenType::Return),
                 ("اساس", TokenType::Super),
                 ("هذا", TokenType::This),

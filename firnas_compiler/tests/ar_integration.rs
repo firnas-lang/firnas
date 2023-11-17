@@ -15,7 +15,11 @@ fn check_semantic_error(code: &str, f: &dyn Fn(&str) -> ()) {
 #[test]
 fn test_compiles_1() {
     Compiler::compile(
-        String::from("اطبع ٤٢ * ١٢؛"),
+        String::from(
+            r#"
+اطبع_سطر(٤٢ * ١٢)؛
+        "#,
+        ),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -24,7 +28,11 @@ fn test_compiles_1() {
 #[test]
 fn test_compiles_2() {
     Compiler::compile(
-        String::from(r"اطبع −٢ * ٣ + (−٤ \ ٢)؛"),
+        String::from(
+            r#"
+اطبع_سطر(−٢ * ٣ + (−٤ \ ٢))؛
+        "#,
+        ),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -43,7 +51,12 @@ fn test_var_decl_implicit_nil() {
 #[test]
 fn test_var_reading_2() {
     Compiler::compile(
-        String::from("دع س؛ اطبع س؛"),
+        String::from(
+            r#"
+دع س؛
+اطبع_سطر(س)؛
+        "#,
+        ),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -52,7 +65,12 @@ fn test_var_reading_2() {
 #[test]
 fn test_var_reading_3() {
     Compiler::compile(
-        String::from("دع س؛ اطبع س * ٢ + س؛"),
+        String::from(
+            r#"
+دع س؛
+اطبع_سطر(س * ٢ + س)؛
+        "#,
+        ),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -60,14 +78,19 @@ fn test_var_reading_3() {
 
 #[test]
 fn test_this_outside_method_1() {
-    check_semantic_error("اطبع هذا؛", &|err: &str| {
-        assert!(err.starts_with("Cannot use 'this' outside of class"))
-    })
+    check_semantic_error(
+        r#"
+اطبع_سطر(هذا)؛
+    "#,
+        &|err: &str| assert!(err.starts_with("Cannot use 'this' outside of class")),
+    )
 }
 
 #[test]
 fn test_this_outside_method_2() {
-    let code = "دالة فوو() { اطبع هذا؛ }";
+    let code = r#"
+    دالة فوو() { اطبع_سطر(هذا)؛ }
+    "#;
     check_semantic_error(code, &|err: &str| {
         assert!(err.starts_with("Cannot use 'this' outside of class"))
     })

@@ -15,7 +15,7 @@ fn check_semantic_error(code: &str, f: &dyn Fn(&str) -> ()) {
 #[test]
 fn test_compiles_1() {
     Compiler::compile(
-        String::from("print 42 * 12;"),
+        String::from("printLine(42 * 12);"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -24,7 +24,7 @@ fn test_compiles_1() {
 #[test]
 fn test_compiles_2() {
     Compiler::compile(
-        String::from("print -2 * 3 + (-4 / 2);"),
+        String::from("printLine(-2 * 3 + (-4 / 2));"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -47,7 +47,7 @@ fn test_var_decl_implicit_nil() {
 #[test]
 fn test_var_reading_2() {
     Compiler::compile(
-        String::from("var x; print x;"),
+        String::from("var x; printLine(x);"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -56,7 +56,7 @@ fn test_var_reading_2() {
 #[test]
 fn test_var_reading_3() {
     Compiler::compile(
-        String::from("var x; print x * 2 + x;"),
+        String::from("var x; printLine(x * 2 + x);"),
         firnas_ext::Extensions::default(),
     )
     .unwrap();
@@ -64,14 +64,14 @@ fn test_var_reading_3() {
 
 #[test]
 fn test_this_outside_method_1() {
-    check_semantic_error("print this;", &|err: &str| {
+    check_semantic_error("printLine(this);", &|err: &str| {
         assert!(err.starts_with("Cannot use 'this' outside of class"))
     })
 }
 
 #[test]
 fn test_this_outside_method_2() {
-    check_semantic_error("fun foo() {print this;}", &|err: &str| {
+    check_semantic_error("fun foo() { printLine(this); }", &|err: &str| {
         assert!(err.starts_with("Cannot use 'this' outside of class"))
     })
 }

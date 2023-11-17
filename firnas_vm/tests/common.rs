@@ -1,4 +1,5 @@
-use firnas_compiler::compiler::{Compiler, Error};
+use firnas_compiler::compiler::Compiler;
+use firnas_compiler::compiler::Error;
 use firnas_vm::virtual_machine::VirtualMachine;
 use firnas_vm::virtual_machine::VmError;
 

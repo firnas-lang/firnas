@@ -1,5 +1,7 @@
 [alias]
 firnas_en = "run -p firnas_cli --"
 firnas_ar = "run -p firnas_cli --no-default-features --features ar --"
+
 test_ar_vm = "test -p firnas_vm --no-default-features --features ar"
-test_en_vm = "test -p firnas_vm --no-default-features --features en"
+test_ar_tokenizer = "test -p firnas_tokenizer --no-default-features --features ar"
+test_ar_compiler = "test -p firnas_compiler --no-default-features --features ar"

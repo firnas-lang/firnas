@@ -111,18 +111,6 @@ name = "firnas_bytecode"
 version = "0.1.0"
 
 [[package]]
-name = "firnas_cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "firnas_compiler",
- "firnas_ext",
- "firnas_vm",
- "text_io",
-]
-
-[[package]]
 name = "firnas_compiler"
 version = "0.1.0"
 dependencies = [
@@ -151,6 +139,18 @@ dependencies = [
  "firnas_bytecode",
  "firnas_compiler",
  "firnas_ext",
+]
+
+[[package]]
+name = "firnasc"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "firnas_compiler",
+ "firnas_ext",
+ "firnas_vm",
+ "text_io",
 ]
 
 [[package]]

@@ -10,14 +10,19 @@ You can use Firnas in your browser using WebAssembly. [Firnas Playground](https:
 
 ### Locally
 
-We currently haven't made any pre-built binaries yet. To install locally first you need to install [Rust using `rustup`](https://www.rust-lang.org/tools/install), then run:
+We currently haven't made any pre-built binaries yet.
+
+To install locally first you need:
+
+- [Rust using `rustup`](https://www.rust-lang.org/tools/install)
+- [git](https://git-scm.com/):
+
+Now you can either install a specific version from our [GitHub releases](https://github.com/firnas-lang/firnas/releases), or install from master:
 
 ```bash
-cargo install --locked firnas
-```
+cargo install --locked --no-default-features --features ar --git https://github.com/firnas-lang/firnas.git firnasc
 
-```bash
-firnas compile ./example
+firnasc compile <path/to/file>
 ```
 
 ## License

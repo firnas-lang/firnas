@@ -225,7 +225,7 @@ fn it_should_tokenize_literals() {
 fn it_should_tokenize_keywords() {
     assert_eq!(
         scan_tokens(
-            "و صنف غير_ذلك خطا دالة من اذا_كان عدم او رد اساس هذا صحيح دع طالما لامدا".to_owned()
+            "و صنف غير_ذلك خطا دالة من اذا_كان عدم او رد اساس هذا صح دع طالما لامدا".to_owned()
         )
         .unwrap(),
         vec![
@@ -315,7 +315,7 @@ fn it_should_tokenize_keywords() {
             },
             Token {
                 ty: TokenType::True,
-                lexeme: String::from("صحيح"),
+                lexeme: String::from("صح"),
                 literal: None,
                 line: 1,
                 col: 1

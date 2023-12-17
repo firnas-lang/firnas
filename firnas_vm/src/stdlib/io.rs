@@ -189,7 +189,7 @@ fn make_number(num: f64) -> String {
 
 fn make_bool(b: bool) -> String {
     let (t, f) = if cfg!(feature = "ar") {
-        (String::from("صحيح"), String::from("خطا"))
+        (String::from("صح"), String::from("خطا"))
     } else {
         (String::from("true"), String::from("false"))
     };

@@ -52,7 +52,7 @@ impl Default for Scanner {
                 ("رد", TokenType::Return),
                 ("اساس", TokenType::Super),
                 ("هذا", TokenType::This),
-                ("صحيح", TokenType::True),
+                ("صح", TokenType::True),
                 ("دع", TokenType::Var),
                 ("طالما", TokenType::While),
                 ("لامدا", TokenType::Lambda),

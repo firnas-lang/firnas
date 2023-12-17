@@ -42,11 +42,11 @@ impl Default for Scanner {
             keywords: vec![
                 ("و", TokenType::And),
                 ("صنف", TokenType::Class),
-                ("اخر", TokenType::Else),
+                ("غير_ذلك", TokenType::Else),
                 ("خطا", TokenType::False),
                 ("من", TokenType::For),
                 ("دالة", TokenType::Fun),
-                ("لو", TokenType::If),
+                ("اذا_كان", TokenType::If),
                 ("عدم", TokenType::Nil),
                 ("او", TokenType::Or),
                 ("رد", TokenType::Return),

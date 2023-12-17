@@ -224,8 +224,10 @@ fn it_should_tokenize_literals() {
 #[test]
 fn it_should_tokenize_keywords() {
     assert_eq!(
-        scan_tokens("و صنف اخر خطا دالة من لو عدم او رد اساس هذا صحيح دع طالما لامدا".to_owned())
-            .unwrap(),
+        scan_tokens(
+            "و صنف غير_ذلك خطا دالة من اذا_كان عدم او رد اساس هذا صحيح دع طالما لامدا".to_owned()
+        )
+        .unwrap(),
         vec![
             Token {
                 ty: TokenType::And,
@@ -243,7 +245,7 @@ fn it_should_tokenize_keywords() {
             },
             Token {
                 ty: TokenType::Else,
-                lexeme: String::from("اخر"),
+                lexeme: String::from("غير_ذلك"),
                 literal: None,
                 line: 1,
                 col: 1
@@ -271,7 +273,7 @@ fn it_should_tokenize_keywords() {
             },
             Token {
                 ty: TokenType::If,
-                lexeme: String::from("لو"),
+                lexeme: String::from("اذا_كان"),
                 literal: None,
                 line: 1,
                 col: 1
